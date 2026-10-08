@@ -25,7 +25,7 @@ npm ci --ignore-scripts
 Open this folder in Android Studio/VS Code with Flutter and Dart support. During
 `run.sh`, press `r` for hot reload or `R` for hot restart. Install
 `dist/smart-choice-mobile-debug.apk` by dragging it onto the emulator. This is
-an Android 10+ **debug-signed testing build**, not a Play Store release.
+an Android 10+ ARM64 **debug-signed testing build**, not a Play Store release.
 
 ## Behavior and safeguards
 

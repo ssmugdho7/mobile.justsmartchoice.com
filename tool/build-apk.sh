@@ -2,7 +2,7 @@
 set -eu
 cd "$(dirname "$0")/.."
 . ./tool/flutter-bin.sh
-"$FLUTTER_BIN" build apk --debug "$@"
+"$FLUTTER_BIN" build apk --debug --target-platform android-arm64 "$@"
 mkdir -p dist
 cp build/app/outputs/flutter-apk/app-debug.apk dist/smart-choice-mobile-debug.apk
 python3 - <<'BUILD_METADATA'
