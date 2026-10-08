@@ -20,6 +20,31 @@ class DocumentDownload {
   final Future<Directory> Function() _temporaryDirectory;
   static const channel = MethodChannel('com.justsmartchoice.mobile/documents');
   static const maxBytes = 100 * 1024 * 1024;
+  Future<SavedDocument> savePdfBytes(Uint8List bytes, String name) async {
+    if (bytes.length < 5 ||
+        bytes.length > 10 * 1024 * 1024 ||
+        String.fromCharCodes(bytes.take(5)) != '%PDF-') {
+      throw const FormatException('Invalid PDF document.');
+    }
+    final directory = await _temporaryDirectory();
+    final file = File(
+      '${directory.path}/crm-${DateTime.now().microsecondsSinceEpoch}.download',
+    );
+    try {
+      await file.writeAsBytes(bytes, flush: true);
+      final safe = safeName(name, 'application/pdf');
+      final uri = await channel.invokeMethod<String>('saveDownload', {
+        'path': file.path,
+        'name': safe,
+        'mime': 'application/pdf',
+      });
+      if (uri == null) throw const FormatException('Unable to save PDF.');
+      return SavedDocument(uri, safe, 'application/pdf');
+    } finally {
+      if (await file.exists()) await file.delete();
+    }
+  }
+
   static String safeName(String? suggested, String mime) {
     final name = (suggested ?? '')
         .split(RegExp(r'[/\\]'))

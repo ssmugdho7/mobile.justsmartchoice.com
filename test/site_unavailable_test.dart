@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:smart_choice_mobile/site_unavailable.dart';
 
 void main() {
-  testWidgets('Missing mobile site offers retry without production fallback', (
+  testWidgets('Connection failure names the actual CRM and offers retry', (
     tester,
   ) async {
     var retried = false;
@@ -13,8 +13,7 @@ void main() {
       ),
     );
     expect(find.text('Unable to connect'), findsOneWidget);
-    expect(find.text('mobile.justsmartchoice.com'), findsOneWidget);
-    expect(find.textContaining('crm.justsmartchoice.com'), findsNothing);
+    expect(find.text('crm.justsmartchoice.com'), findsOneWidget);
     await tester.tap(find.text('Try again'));
     expect(retried, isTrue);
     expect(tester.takeException(), isNull);

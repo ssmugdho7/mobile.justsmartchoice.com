@@ -6,3 +6,4 @@ cd "$(dirname "$0")/.."
 "$(dirname "$FLUTTER_BIN")/dart" format --output=none --set-exit-if-changed lib test integration_test test_driver
 "$FLUTTER_BIN" analyze
 "$FLUTTER_BIN" test
+npm test

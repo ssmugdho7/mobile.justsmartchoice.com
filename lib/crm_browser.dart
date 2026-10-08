@@ -1,3 +1,7 @@
+import 'dart:collection';
+import 'dart:convert';
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
@@ -9,13 +13,98 @@ import 'navigation_policy.dart';
 import 'site_unavailable.dart';
 
 class CrmBrowser extends StatefulWidget {
-  const CrmBrowser({super.key, this.windowId});
+  const CrmBrowser({
+    super.key,
+    this.windowId,
+    this.onPageReady,
+    this.initialUri,
+  });
   final int? windowId;
+  final Uri? initialUri;
+  final Future<void> Function(InAppWebViewController)? onPageReady;
   @override
   State<CrmBrowser> createState() => _CrmBrowserState();
 }
 
 class _CrmBrowserState extends State<CrmBrowser> {
+  String? _pdfScript;
+  final _bridgeNonce = List.generate(
+    24,
+    (_) => Random.secure().nextInt(256).toRadixString(16).padLeft(2, '0'),
+  ).join();
+  @override
+  void initState() {
+    super.initState();
+    // Do not log session URLs or PDF bridge payloads, including debug builds.
+    PlatformInAppWebViewController.debugLoggingSettings.enabled = false;
+    rootBundle.loadString('assets/pdf_download_bridge.js').then((source) {
+      if (mounted) {
+        setState(
+          () => _pdfScript = source
+              .replaceAll('"__SC_NONCE__"', jsonEncode(_bridgeNonce))
+              .replaceAll(
+                '"__SC_ORIGIN__"',
+                jsonEncode(NavigationPolicy.home.origin),
+              ),
+        );
+      }
+    });
+  }
+
+  Future<bool> _exportPdf(List<dynamic> args) async {
+    if (args.length < 2 || args[0] != _bridgeNonce) return false;
+    final page = await _web?.getUrl();
+    if (!mounted || page == null || !NavigationPolicy.isCrm(page)) return false;
+    if (args[1] == 'error') {
+      _message(
+        'Unable to download this PDF. Check your CRM login and try again.',
+      );
+      return true;
+    }
+    if (args.length != 4 ||
+        args[1] != 'save' ||
+        args[2] is! String ||
+        args[3] is! String ||
+        (args[3] as String).length > 14 * 1024 * 1024 ||
+        _downloading) {
+      return false;
+    }
+    setState(() => _downloading = true);
+    try {
+      final document = await _downloads.savePdfBytes(
+        base64Decode(args[3] as String),
+        args[2] as String,
+      );
+      _saved(document);
+      return true;
+    } catch (_) {
+      return false;
+    } finally {
+      if (mounted) setState(() => _downloading = false);
+    }
+  }
+
+  void _saved(SavedDocument document) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('${document.name} saved to Downloads'),
+        action: SnackBarAction(
+          label: 'Open',
+          onPressed: () async {
+            try {
+              await _downloads.open(document);
+            } catch (_) {
+              _message(
+                'Saved to Downloads. Install a compatible viewer to open this file.',
+              );
+            }
+          },
+        ),
+      ),
+    );
+  }
+
   InAppWebViewController? _web;
   final _downloads = DocumentDownload();
   Uri _current = NavigationPolicy.home;
@@ -36,6 +125,22 @@ class _CrmBrowserState extends State<CrmBrowser> {
       urlRequest: URLRequest(url: WebUri(_current.toString())),
     );
   }
+
+  Future<void> _portal(String path) async {
+    final url = NavigationPolicy.home.resolve(path);
+    await _web?.loadUrl(urlRequest: URLRequest(url: WebUri(url.toString())));
+  }
+
+  void _info() => showAboutDialog(
+    context: context,
+    applicationName: 'Smart Choice Mobile',
+    applicationVersion: '0.2.0',
+    children: const [
+      Text(
+        'CRM: crm.justsmartchoice.com\nApp downloads: mobile.justsmartchoice.com\nUses your existing CRM account and records.',
+      ),
+    ],
+  );
 
   Future<void> _back() async {
     if (await _web?.canGoBack() ?? false) {
@@ -172,17 +277,20 @@ class _CrmBrowserState extends State<CrmBrowser> {
               ? () => Navigator.of(context).pop()
               : _back,
         ),
-        title: const Column(
+        title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            const Text(
               'Smart Choice',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
             ),
-            Text(
-              'Mobile CRM',
-              style: TextStyle(fontSize: 11, color: Color(0xff64748b)),
-            ),
+            if (MediaQuery.textScalerOf(context).scale(1) <= 1.3)
+              const Text(
+                'Mobile CRM',
+                style: TextStyle(fontSize: 11, color: Color(0xff64748b)),
+              ),
           ],
         ),
         actions: [
@@ -200,19 +308,20 @@ class _CrmBrowserState extends State<CrmBrowser> {
             icon: const Icon(Icons.refresh),
             onPressed: _retry,
           ),
-          IconButton(
-            tooltip: 'App information',
-            icon: const Icon(Icons.info_outline),
-            onPressed: () => showAboutDialog(
-              context: context,
-              applicationName: 'Smart Choice Mobile',
-              applicationVersion: '0.1.0',
-              children: const [
-                Text(
-                  'Connected to mobile.justsmartchoice.com.\nThis app does not connect to the production CRM.',
-                ),
-              ],
-            ),
+          PopupMenuButton<String>(
+            tooltip: 'Choose CRM portal',
+            onSelected: (value) {
+              if (value == 'about') {
+                _info();
+              } else {
+                _portal(value);
+              }
+            },
+            itemBuilder: (_) => const [
+              PopupMenuItem(value: '/admin', child: Text('Staff portal')),
+              PopupMenuItem(value: '/clients', child: Text('Customer portal')),
+              PopupMenuItem(value: 'about', child: Text('App information')),
+            ],
           ),
         ],
       ),
@@ -220,116 +329,149 @@ class _CrmBrowserState extends State<CrmBrowser> {
         top: false,
         child: Stack(
           children: [
-            InAppWebView(
-              windowId: widget.windowId,
-              initialUrlRequest: widget.windowId == null
-                  ? URLRequest(url: WebUri(NavigationPolicy.home.toString()))
-                  : null,
-              initialSettings: InAppWebViewSettings(
-                useShouldOverrideUrlLoading: true,
-                useShouldInterceptRequest: true,
-                useOnDownloadStart: true,
-                supportMultipleWindows: true,
-                javaScriptCanOpenWindowsAutomatically: false,
-                mediaPlaybackRequiresUserGesture: true,
-                allowsInlineMediaPlayback: true,
-                mixedContentMode: MixedContentMode.MIXED_CONTENT_NEVER_ALLOW,
-                allowFileAccess: false,
-                allowContentAccess: true,
-              ),
-              onWebViewCreated: (controller) => _web = controller,
-              shouldOverrideUrlLoading: (controller, action) =>
-                  _navigate(action),
-              // Android doesn't call shouldOverrideUrlLoading for POST actions.
-              // Block the other CRM hosts at the request layer too, including
-              // forms, frames and scripts that contain a stale absolute URL.
-              shouldInterceptRequest: (controller, request) async {
-                if (NavigationPolicy.isOtherCrm(request.url)) {
-                  return WebResourceResponse(
-                    statusCode: 403,
-                    reasonPhrase: 'Wrong CRM environment',
-                    contentType: 'text/plain',
-                    contentEncoding: 'utf-8',
+            if (_pdfScript == null)
+              const Center(child: CircularProgressIndicator()),
+            if (_pdfScript != null)
+              InAppWebView(
+                initialUserScripts: UnmodifiableListView([
+                  UserScript(
+                    source: _pdfScript!,
+                    injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
+                    forMainFrameOnly: true,
+                  ),
+                ]),
+                windowId: widget.windowId,
+                initialUrlRequest: widget.windowId == null
+                    ? URLRequest(
+                        url: WebUri(
+                          (widget.initialUri != null &&
+                                      NavigationPolicy.isCrm(widget.initialUri!)
+                                  ? widget.initialUri!
+                                  : NavigationPolicy.home)
+                              .toString(),
+                        ),
+                      )
+                    : null,
+                initialSettings: InAppWebViewSettings(
+                  useShouldOverrideUrlLoading: true,
+                  useShouldInterceptRequest: true,
+                  useOnDownloadStart: true,
+                  supportMultipleWindows: true,
+                  javaScriptCanOpenWindowsAutomatically: false,
+                  mediaPlaybackRequiresUserGesture: true,
+                  allowsInlineMediaPlayback: true,
+                  mixedContentMode: MixedContentMode.MIXED_CONTENT_NEVER_ALLOW,
+                  allowFileAccess: false,
+                  allowContentAccess: true,
+                ),
+                onWebViewCreated: (controller) {
+                  _web = controller;
+                  controller.addJavaScriptHandler(
+                    handlerName: 'scExportPdf',
+                    callback: _exportPdf,
                   );
-                }
-                return null;
-              },
-              onLoadStart: (controller, url) async {
-                if (url == null || url.toString() == 'about:blank') return;
-                if (NavigationPolicy.decide(url) !=
-                    NavigationDecision.internal) {
-                  await controller.stopLoading();
-                  _message(
-                    'This app only opens the mobile CRM and its meeting rooms.',
-                  );
-                  if (widget.windowId == null) {
-                    await controller.loadUrl(
-                      urlRequest: URLRequest(
-                        url: WebUri(NavigationPolicy.home.toString()),
-                      ),
+                },
+                shouldOverrideUrlLoading: (controller, action) =>
+                    _navigate(action),
+                // Android doesn't call shouldOverrideUrlLoading for POST actions.
+                // Block development CRM hosts at the request layer too, including
+                // forms, frames and scripts that contain a stale absolute URL.
+                shouldInterceptRequest: (controller, request) async {
+                  if (NavigationPolicy.isOtherCrm(request.url)) {
+                    return WebResourceResponse(
+                      statusCode: 403,
+                      reasonPhrase: 'Wrong CRM environment',
+                      contentType: 'text/plain',
+                      contentEncoding: 'utf-8',
                     );
                   }
-                  return;
-                }
-                if (mounted) {
-                  setState(() {
-                    _current = url;
-                    _unavailable = false;
-                    _httpError = false;
-                  });
-                }
-              },
-              onLoadStop: (controller, url) {
-                if (mounted) setState(() => _progress = 1);
-              },
-              onProgressChanged: (controller, progress) {
-                if (mounted) setState(() => _progress = progress / 100);
-              },
-              onReceivedError: (controller, request, error) {
-                if (request.isForMainFrame == true && mounted) {
-                  setState(() {
-                    _unavailable = true;
-                    _httpError = false;
-                  });
-                }
-              },
-              onReceivedHttpError: (controller, request, response) {
-                if (request.isForMainFrame == true &&
-                    (response.statusCode ?? 0) >= 400 &&
-                    mounted) {
-                  setState(() {
-                    _unavailable = true;
-                    _httpError = true;
-                  });
-                }
-              },
-              // Default Android certificate validation remains enabled.
-              onPermissionRequest: (controller, request) => _media(request),
-              onDownloadStartRequest: (controller, request) =>
-                  _download(request),
-              onCreateWindow: (controller, action) async {
-                if (!mounted || action.hasGesture != true) return false;
-                final url = action.request.url;
-                if (url != null &&
-                    url.toString() != 'about:blank' &&
-                    NavigationPolicy.decide(url) !=
-                        NavigationDecision.internal) {
-                  await _navigate(action);
-                  return false;
-                }
-                Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => CrmBrowser(windowId: action.windowId),
-                  ),
-                );
-                return true;
-              },
-              onCloseWindow: (controller) {
-                if (widget.windowId != null && mounted) {
-                  Navigator.of(context).pop();
-                }
-              },
-            ),
+                  return null;
+                },
+                onLoadStart: (controller, url) async {
+                  if (url == null || url.toString() == 'about:blank') return;
+                  if (NavigationPolicy.decide(url) !=
+                      NavigationDecision.internal) {
+                    await controller.stopLoading();
+                    _message(
+                      'This app only opens the mobile CRM and its meeting rooms.',
+                    );
+                    if (widget.windowId == null) {
+                      await controller.loadUrl(
+                        urlRequest: URLRequest(
+                          url: WebUri(
+                            (widget.initialUri != null &&
+                                        NavigationPolicy.isCrm(
+                                          widget.initialUri!,
+                                        )
+                                    ? widget.initialUri!
+                                    : NavigationPolicy.home)
+                                .toString(),
+                          ),
+                        ),
+                      );
+                    }
+                    return;
+                  }
+                  if (mounted) {
+                    setState(() {
+                      _current = url;
+                      _unavailable = false;
+                      _httpError = false;
+                    });
+                  }
+                },
+                onLoadStop: (controller, url) async {
+                  if (mounted) setState(() => _progress = 1);
+                  await widget.onPageReady?.call(controller);
+                },
+                onProgressChanged: (controller, progress) {
+                  if (mounted) setState(() => _progress = progress / 100);
+                },
+                onReceivedError: (controller, request, error) {
+                  if (request.isForMainFrame == true && mounted) {
+                    setState(() {
+                      _unavailable = true;
+                      _httpError = false;
+                    });
+                  }
+                },
+                onReceivedHttpError: (controller, request, response) {
+                  if (request.isForMainFrame == true &&
+                      (response.statusCode ?? 0) >= 400 &&
+                      mounted) {
+                    setState(() {
+                      _unavailable = true;
+                      _httpError = true;
+                    });
+                  }
+                },
+                // Default Android certificate validation remains enabled.
+                onPermissionRequest: (controller, request) => _media(request),
+                onDownloadStartRequest: (controller, request) =>
+                    _download(request),
+                onCreateWindow: (controller, action) async {
+                  if (!mounted || action.hasGesture != true) return false;
+                  final url = action.request.url;
+                  if (url != null &&
+                      url.toString() != 'about:blank' &&
+                      NavigationPolicy.decide(url) !=
+                          NavigationDecision.internal) {
+                    await _navigate(action);
+                    return false;
+                  }
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => CrmBrowser(windowId: action.windowId),
+                    ),
+                  );
+                  return true;
+                },
+                onCloseWindow: (controller) {
+                  if (widget.windowId != null && mounted) {
+                    Navigator.of(context).pop();
+                  }
+                },
+              ),
             if (_progress < 1 && !_unavailable)
               Align(
                 alignment: Alignment.topCenter,

@@ -93,20 +93,20 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   late Directory temporary;
   final exports = <Map<Object?, Object?>>[];
+  var expectedBytes = <int>[37, 80, 68, 70];
   setUp(() async {
     temporary = await Directory.systemTemp.createTemp('sc-download-test-');
     exports.clear();
+    expectedBytes = [37, 80, 68, 70];
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(DocumentDownload.channel, (
           MethodCall call,
         ) async {
           final args = Map<Object?, Object?>.from(call.arguments as Map);
-          expect(await File(args['path'] as String).readAsBytes(), [
-            37,
-            80,
-            68,
-            70,
-          ]);
+          expect(
+            await File(args['path'] as String).readAsBytes(),
+            expectedBytes,
+          );
           exports.add(args);
           return 'content://media/external/downloads/123';
         });
@@ -121,7 +121,7 @@ void main() {
         clientFactory: () => client,
         temporaryDirectory: () async => temporary,
       ).save(
-        Uri.parse('https://mobile.justsmartchoice.com/download/contract'),
+        Uri.parse('https://crm.justsmartchoice.com/download/contract'),
         cookie: 'session=test-fixture',
         userAgent: 'TestWebView',
       );
@@ -142,10 +142,7 @@ void main() {
   });
   test('Cross-host redirect is refused before another request can transmit cookies', () async {
     final client = Client([
-      Response(
-        302,
-        Headers(location: 'https://crm.justsmartchoice.com/download/pdf'),
-      ),
+      Response(302, Headers(location: 'https://example.com/download/pdf')),
     ]);
     await expectLater(save(client), throwsFormatException);
     expect(client.urls, hasLength(1));
@@ -166,6 +163,32 @@ void main() {
         client.requests.last.headers.value('cookie'),
         'session=test-fixture',
       );
+    },
+  );
+  test('POST PDF bytes retain PDF identity and sanitized filename', () async {
+    expectedBytes = [37, 80, 68, 70, 45, 49, 46, 55];
+    final result = await DocumentDownload(
+      temporaryDirectory: () async => temporary,
+    ).savePdfBytes(Uint8List.fromList(expectedBytes), '../../Contract.pdf');
+    expect(result.name, 'Contract.pdf');
+    expect(result.mimeType, 'application/pdf');
+    expect(exports.single['mime'], 'application/pdf');
+    expect(await temporary.list().toList(), isEmpty);
+  });
+  test(
+    'HTML or empty bridge payloads never reach native file export',
+    () async {
+      final downloader = DocumentDownload(
+        temporaryDirectory: () async => temporary,
+      );
+      for (final bytes in [<int>[], '<html>login</html>'.codeUnits]) {
+        await expectLater(
+          downloader.savePdfBytes(Uint8List.fromList(bytes), 'Fake.pdf'),
+          throwsFormatException,
+        );
+      }
+      expect(exports, isEmpty);
+      expect(await temporary.list().toList(), isEmpty);
     },
   );
   test('Login HTML, server failures, empty and oversized responses are not exported', () async {

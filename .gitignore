@@ -55,4 +55,5 @@ android/local.properties
 .env
 .env.*
 dist/
+node_modules/
 .firecrawl/

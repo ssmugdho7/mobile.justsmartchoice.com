@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 
 import 'crm_browser.dart';
 
@@ -8,7 +9,9 @@ void main() {
 }
 
 class SmartChoiceApp extends StatelessWidget {
-  const SmartChoiceApp({super.key});
+  const SmartChoiceApp({super.key, this.onPageReady, this.initialUri});
+  final Uri? initialUri;
+  final Future<void> Function(InAppWebViewController)? onPageReady;
   @override
   Widget build(BuildContext context) => MaterialApp(
     title: 'Smart Choice Mobile',
@@ -24,6 +27,6 @@ class SmartChoiceApp extends StatelessWidget {
         elevation: 0,
       ),
     ),
-    home: const CrmBrowser(),
+    home: CrmBrowser(onPageReady: onPageReady, initialUri: initialUri),
   );
 }

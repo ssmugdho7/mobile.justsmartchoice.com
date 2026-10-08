@@ -3,14 +3,14 @@ import 'package:smart_choice_mobile/navigation_policy.dart';
 import 'package:smart_choice_mobile/document_download.dart';
 
 void main() {
-  test('Mobile routes and Jitsi rooms stay in the app', () {
+  test('Existing CRM routes and Jitsi rooms stay in the app', () {
     expect(
       NavigationPolicy.decide(NavigationPolicy.home),
       NavigationDecision.internal,
     );
     expect(
       NavigationPolicy.decide(
-        Uri.parse('https://mobile.justsmartchoice.com/proposal/1/key'),
+        Uri.parse('https://crm.justsmartchoice.com/proposal/1/key'),
       ),
       NavigationDecision.internal,
     );
@@ -19,13 +19,12 @@ void main() {
       NavigationDecision.internal,
     );
   });
-  test('Production, dev, insecure and unsafe URLs cannot navigate', () {
+  test('Development, insecure and unsafe URLs cannot navigate', () {
     for (final value in [
-      'https://crm.justsmartchoice.com/admin',
       'https://dev.justsmartchoice.com/admin',
-      'http://mobile.justsmartchoice.com/admin',
-      'https://mobile.justsmartchoice.com:8443/admin',
-      'https://user@mobile.justsmartchoice.com/admin',
+      'http://crm.justsmartchoice.com/admin',
+      'https://crm.justsmartchoice.com:8443/admin',
+      'https://user@crm.justsmartchoice.com/admin',
       'file:///etc/passwd',
       'javascript:alert(1)',
       'intent://scan/',
@@ -40,7 +39,7 @@ void main() {
     }
     expect(
       NavigationPolicy.isOtherCrm(
-        Uri.parse('https://crm.justsmartchoice.com/api/upload'),
+        Uri.parse('https://dev.justsmartchoice.com/api/upload'),
       ),
       isTrue,
     );
@@ -49,6 +48,7 @@ void main() {
   test('External links do not inherit CRM cookies or media permissions', () {
     for (final value in [
       'https://example.com',
+      'https://mobile.justsmartchoice.com/',
       'https://mobile.justsmartchoice.com.evil.test',
       'https://meet.jit.si.evil.test',
       'mailto:support@example.com',

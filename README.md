@@ -1,98 +1,96 @@
 # Smart Choice Mobile
 
-Editable Flutter Android wrapper for **https://mobile.justsmartchoice.com/admin**.
-This new app has package ID `com.justsmartchoice.mobile`, so it can coexist with
-the old MightyWeb APK. No original app source or builder account is required.
+Editable Flutter Android app for the existing **https://crm.justsmartchoice.com**.
+**https://mobile.justsmartchoice.com** hosts its download page, not a second CRM.
+Staff and customers use their existing accounts and records. Actions affect live
+CRM data; this app does not duplicate the backend, database or authorization.
+Package `com.justsmartchoice.mobile` coexists with the old MightyWeb app.
 
-The hostname is not configured yet. The app shows a connection message with
-Retry until it becomes available; it never falls back to production or dev.
-This project does not create DNS, a Bluehost checkout, or a CRM database.
+## Work on the app
 
-## Run and build
-
-Requires Flutter **3.47.6** (Dart 3.13.5), Android Studio with its Android SDK,
-and an Android emulator/phone running Android 10 / API 29 or newer.
-Use Java **21**, AGP **8.13.2**, Kotlin **2.2.20** and Gradle **8.14.3** (pinned
-in this project for compatibility with the stable WebView plugin). Flutter on
-this Mac uses `/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home`.
-If Android Studio asks for a Gradle JDK, select Java 21 rather than its bundled
-Java 25. Set Flutter's JDK on other machines with `flutter config --jdk-dir=...`.
-
-On this Mac Flutter is installed at `/Users/mugdho/Development/flutter/bin/flutter`.
-Scripts also find it under `$HOME/Development/flutter/bin/flutter` if not on PATH.
+Requires Flutter **3.47.6**, Dart **3.13.5**, Node **20+**, Android SDK and Java
+**21**. AGP **8.13.2**, Kotlin **2.2.20** and Gradle **8.14.3** are pinned for the
+stable WebView plugin. This Mac uses Flutter at
+`/Users/mugdho/Development/flutter/bin/flutter` and Java at
+`/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home`.
 
 ```sh
 cd /Users/mugdho/smart_projects/smart-choice-mobile
+npm ci --ignore-scripts
 ./tool/check.sh
 ./tool/run.sh -d emulator-5554
 ./tool/build-apk.sh
 ```
 
-Open the project directory in Android Studio or VS Code with Flutter/Dart support.
-While `run.sh` is running, press `r` for hot reload or `R` for hot restart.
-Before the hostname is configured, the native offline smoke test can be run with:
+Open this folder in Android Studio/VS Code with Flutter and Dart support. During
+`run.sh`, press `r` for hot reload or `R` for hot restart. Install
+`dist/smart-choice-mobile-debug.apk` by dragging it onto the emulator. This is
+an Android 10+ **debug-signed testing build**, not a Play Store release.
+
+## Behavior and safeguards
+
+- CRM-colored toolbar: back/close, refresh, staff/customer portal switch and info.
+- Server login, cookies, CSRF, roles and ownership checks remain authoritative.
+- CRM and `meet.jit.si` stay inside the app. Other HTTPS, phone and email links
+  open externally. Navigation/requests to the development CRM are blocked.
+- Android file picker and user-initiated popup windows are supported.
+- Camera/microphone prompts occur only for CRM/Jitsi requests, never on startup.
+- HTTPS certificates remain verified; cleartext/mixed content and session backup
+  are disabled. No remote app builder, ad SDK or native credential storage.
+- GET downloads use scoped WebView cookies, reject external redirects and HTML
+  login responses, and have a 100 MiB limit.
+- The existing proposal, estimate, invoice, contract and payment **PDF-only POST
+  forms** preserve CSRF/fields and save through a restricted native bridge
+  (10 MiB limit). Payment, approval, signature and other submission forms are
+  untouched. Generic blob exports or other custom POST downloads need separate
+  implementation if encountered.
+- Files save to Android `Downloads/SmartChoice` using MediaStore; no broad
+  storage permission. Private staging files are deleted after save/failure.
+
+## Verification
+
+`check.sh` runs format, analyzer, Dart tests and PDF-form JavaScript tests.
+Native read-only portal checks use the real Android WebView:
 
 ```sh
-flutter drive --driver=test_driver/integration_test.dart --target=integration_test/offline_launch_test.dart -d emulator-5554
+flutter drive --driver=test_driver/integration_test.dart --target=integration_test/live_portals_test.dart -d emulator-5554
+flutter drive --driver=test_driver/integration_test.dart --target=integration_test/live_pdf_test.dart --dart-define=TEST_PROPOSAL_URL=AUTHORIZED_EXISTING_PROPOSAL_URL -d emulator-5554
 ```
 
-It saves an actual emulator app screenshot to `dist/screenshots/`. Do not run
-this offline-only test against an available mobile website.
-The build script produces `dist/smart-choice-mobile-debug.apk`: drag it onto the
-emulator or install it on a testing phone. This is a debug-signed testing APK,
-not a Play Store release. Run `flutter devices` to find device IDs.
+The PDF test only downloads an existing document. Never commit document hashes,
+cookies, customer PDFs or test credentials. Rebuild the normal APK after running
+integration tests, which build a test entry point. Flutter-layer screenshots do
+not capture the native WebView and are not full-screen visual proof.
 
-## Behavior
+Build/automated tests do not prove authenticated upload, logout persistence,
+invitation delivery or a two-person Jitsi audio/video call. Verify these with
+human login and approved records/devices; do not use production financial
+transactions as smoke tests.
 
-- Minimal CRM-colored toolbar with back/close, refresh and app information.
-- Existing CRM login, cookies, forms and staff/customer permissions remain in
-  the WebView. There is no independent native login or permission bypass.
-- Mobile CRM and `meet.jit.si` pages remain in the app. Other HTTPS, telephone
-  and email links open externally. Production/dev CRM navigation is blocked.
-- User-initiated popup windows and Android file-picker uploads are supported.
-- Camera/microphone permission requests are limited to the mobile CRM and
-  Jitsi, and use Android runtime permission prompts. Nothing is requested at
-  startup. Denied permissions remain denied.
-- Authenticated GET downloads use applicable WebView cookies and save through
-  Android MediaStore to `Downloads/SmartChoice` with an Open action. No broad
-  storage permission is needed. Redirects cannot forward cookies outside the
-  mobile CRM. Downloads are limited to 100 MB and reject HTML login responses.
-- HTTPS/certificate validation stays enabled. Cleartext/mixed content and
-  app-local session backups are disabled. There is no ad SDK or remote builder.
+## GitHub and deployment
 
-Server-generated GET/PDF downloads are supported. JavaScript `blob:` downloads
-and documents requiring replaying a POST are not implemented. Verify actual
-download routes once the mobile site is available. Refreshing a CRM page can
-resubmit a form; the wrapper never automatically retries form submissions.
+Origin: **https://github.com/ssmugdho7/mobile.justsmartchoice.com**. Work on `dev`;
+use `main` for approved releases. GitHub Actions checks source and builds a test
+APK artifact. Pushes do not automatically update installed apps or Bluehost.
 
-## Source and delivery
-
-Keep the app in its own GitHub repository, using `dev` for mobile development
-and `main` for approved releases. Commit source, `pubspec.lock`, tests and build
-scripts. Do not commit build outputs, SDK paths, signing keys or private data.
-This initial project has no GitHub remote configured.
-
-The included GitHub Actions workflow checks formatting, analysis and tests,
-then builds a debug APK artifact on dev/main pushes and pull requests.
-
-| Change | How it reaches testers |
+| Change | Delivery |
 | --- | --- |
-| CRM PHP/CSS/JavaScript | Deploy to the separate mobile Bluehost checkout, then reload the app |
-| Native UI, permissions, icon or plugins | Build and install a new APK |
-| GitHub push | Runs CI; does not update an installed app automatically |
+| CRM PHP/CSS/JS | Existing CRM release process; reload the app |
+| Native toolbar, plugins, permissions | Build/install a new APK |
+| Download page/APK | Explicit mobile website deployment |
 
-Configure the mobile site's DNS, HTTPS certificate, CRM base URL and separate
-checkout later. Decide database isolation before write-based testing; this
-app does not configure or share a CRM database itself.
+After checking/building and committing source, publish only `web/` and the APK:
 
-## Release checklist
+```sh
+python3 tool/deploy-web.py
+```
 
-Configure a private release-signing key before distribution. Gradle intentionally
-does not sign release builds with a developer debug key. The old APK cannot be
-upgraded in place because its package/signing identity is different.
+This script targets only `/home2/scusawco/public_html/mobile`, backs up replaced
+files outside the public root, stages explicit files and checks APK integrity.
+It preserves `.htaccess`, `.well-known`, CRM source, uploads and databases.
+The command prints a rollback script location. The SSH key stays outside Git.
 
-After the mobile site exists, verify login/logout persistence, permissions,
-CSRF forms, uploads, actual document downloads, popup/back navigation and
-Jitsi on two real Android phones. A successful build does not prove live
-meeting audio/video or invitation delivery. Keep payment/approval/signature
-testing away from production data.
+Keep SDK paths, generated outputs, signing keys, secrets and runtime/customer
+data out of commits. Release signing must be configured privately before public
+production/store distribution. The old app has a different package/signature
+and cannot be upgraded by this APK.

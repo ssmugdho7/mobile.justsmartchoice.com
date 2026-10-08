@@ -1,0 +1,7 @@
+{
+  "name": "smart-choice-mobile-download-tests",
+  "private": true,
+  "scripts": {"test": "node --test test_js/*.test.cjs"},
+  "devDependencies": {"jsdom": "26.1.0"},
+  "engines": {"node": ">=20"}
+}
