@@ -1,0 +1,21 @@
+name: smart_choice_mobile
+description: Editable Android app for the Smart Choice mobile CRM.
+publish_to: none
+version: 0.1.0+1
+environment:
+  sdk: ^3.13.5
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_inappwebview: ^6.1.5
+  permission_handler: ^12.0.1
+  url_launcher: ^6.3.2
+  path_provider: ^2.1.5
+dev_dependencies:
+  integration_test:
+    sdk: flutter
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+flutter:
+  uses-material-design: true
