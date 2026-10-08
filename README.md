@@ -72,6 +72,9 @@ transactions as smoke tests.
 Origin: **https://github.com/ssmugdho7/mobile.justsmartchoice.com**. Work on `dev`;
 use `main` for approved releases. GitHub Actions checks source and builds a test
 APK artifact. Pushes do not automatically update installed apps or Bluehost.
+CI testing artifacts use the runner's debug key and may not update an APK signed
+on this Mac; keep using the same local debug key for website testing updates.
+Stable release signing is required for a distributable update pipeline.
 
 | Change | Delivery |
 | --- | --- |

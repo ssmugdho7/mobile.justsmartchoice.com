@@ -57,3 +57,6 @@ android/local.properties
 dist/
 node_modules/
 .firecrawl/
+
+# Generated Kotlin incremental compiler cache.
+android/.kotlin/
