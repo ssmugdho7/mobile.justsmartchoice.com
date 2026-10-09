@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 
 import 'app_shell.dart';
 import 'app_theme.dart';
 
-void main() => runApp(const PreviewApp());
+SemanticsHandle? previewSemantics;
+
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  previewSemantics = SemanticsBinding.instance.ensureSemantics();
+  runApp(const PreviewApp());
+}
 
 class PreviewApp extends StatelessWidget {
   const PreviewApp({super.key});

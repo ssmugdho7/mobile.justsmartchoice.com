@@ -83,7 +83,7 @@ Stable release signing is required for a distributable update pipeline.
 | Native toolbar, plugins, permissions | Build/install a new APK |
 | Download page/APK | Explicit mobile website deployment |
 
-After checking/building and committing source, publish only `web/` and the APK:
+After checking/building and committing source, publish only `website/` and the APK:
 
 ```sh
 python3 tool/deploy-web.py
