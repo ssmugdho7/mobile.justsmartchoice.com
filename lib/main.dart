@@ -3,6 +3,7 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 
 import 'crm_browser.dart';
 import 'app_shell.dart';
+import 'app_theme.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,17 +24,7 @@ class SmartChoiceApp extends StatelessWidget {
   Widget build(BuildContext context) => MaterialApp(
     title: 'Smart Choice Mobile',
     debugShowCheckedModeBanner: false,
-    theme: ThemeData(
-      useMaterial3: true,
-      colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xff107566)),
-      scaffoldBackgroundColor: const Color(0xfff4f7f9),
-      appBarTheme: const AppBarTheme(
-        backgroundColor: Colors.white,
-        foregroundColor: Color(0xff17453e),
-        centerTitle: false,
-        elevation: 0,
-      ),
-    ),
+    theme: smartChoiceTheme(),
     home: startInPortal
         ? CrmBrowser(onPageReady: onPageReady, initialUri: initialUri)
         : AppShell(onPageReady: onPageReady),

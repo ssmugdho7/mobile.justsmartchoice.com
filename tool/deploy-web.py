@@ -53,8 +53,8 @@ test ! -L {DOCROOT}
 mkdir -p {backup} {stage}
 chmod 700 {backup} {stage}
 ''')
-files = {'index.html': ROOT/'web/index.html', 'index.php': ROOT/'web/index.php',
-         'downloads/.htaccess': ROOT/'web/downloads.htaccess',
+files = {'index.html': ROOT/'website/index.html', 'index.php': ROOT/'website/index.php',
+         'downloads/.htaccess': ROOT/'website/downloads.htaccess',
          'downloads/smart-choice-mobile.apk': APK,
          f'downloads/smart-choice-mobile-{VERSION}.apk': APK}
 with tempfile.TemporaryDirectory() as td:

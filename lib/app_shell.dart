@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 
-import 'crm_browser.dart';
+import 'portal_surface_native.dart'
+    if (dart.library.js_interop) 'portal_surface_web.dart';
+
+import 'package:flutter/foundation.dart';
+
 import 'navigation_policy.dart';
 
 class AppShell extends StatefulWidget {
@@ -151,7 +155,9 @@ class _AppShellState extends State<AppShell> {
     ),
     const Divider(height: 48),
     const Text(
-      'Version 0.3.0 · Android testing build',
+      kIsWeb
+          ? 'Interface preview · Version 0.3.0'
+          : 'Version 0.3.0 · Android testing build',
       style: TextStyle(fontWeight: FontWeight.w600),
     ),
     const SizedBox(height: 12),
@@ -211,7 +217,7 @@ class _AppShellState extends State<AppShell> {
           _about(),
           _portal == null
               ? const SizedBox.shrink()
-              : CrmBrowser(
+              : PortalSurface(
                   initialUri: _portal,
                   navigationDrawer: _drawer(),
                   onAbout: () => _select(1),

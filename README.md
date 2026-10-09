@@ -98,3 +98,17 @@ Keep SDK paths, generated outputs, signing keys, secrets and runtime/customer
 data out of commits. Release signing must be configured privately before public
 production/store distribution. The old app has a different package/signature
 and cannot be upgraded by this APK.
+
+## Daily development and client review
+
+Run `./tool/run.sh -d <android-device-id>` once, then press `r` in that terminal after editing Dart code to hot reload. Press `R` for a full restart. Native Kotlin/Swift or plugin changes need a rebuild; ordinary Flutter screen changes do not need another APK download. `flutter devices` lists connected devices.
+
+The shared Home/About/navigation interface has a browser entry point: `lib/preview_main.dart`. Run `flutter run -d chrome -t lib/preview_main.dart` for local preview. Successful `dev` pushes automatically build and publish it through `.github/workflows/preview.yml` to GitHub Pages. Client link: https://mobile.justsmartchoice.com/preview/ . Refresh that link after the workflow completes; the header identifies the source commit and build time.
+
+This preview uses the same Flutter AppShell and theme as the native app. It opens the live CRM in a separate tab, rather than embedding customer sessions. It does not verify native downloads, uploads, permissions or video calling; check those in the Android emulator/device at milestones. No new APK is needed for client interface review.
+
+The download site's source is now `website/`; `web/` is Flutter's browser build scaffold. Keep those deployment targets separate.
+
+## Apple release preparation
+
+An iOS project is included with the app bundle identifier and camera/microphone/photo purpose strings. It is a scaffold, not a verified iOS release: this Mac currently has Command Line Tools but not full Xcode. Before TestFlight, install Xcode, configure the private Apple signing team, implement and test the iOS document-saving channel, test WebView login/uploads/video meetings on a real iPhone, and perform App Store review preparation. Never publish debug signing keys or Apple credentials. Android's native document channel is not an iOS implementation.
