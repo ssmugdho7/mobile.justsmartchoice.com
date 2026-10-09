@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 /// Rebuilt as scalable artwork so the supplied menu stays sharp on any device.
@@ -136,35 +138,44 @@ class LandingPage extends StatelessWidget {
     child: SafeArea(
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final compact = constraints.maxHeight < 650;
+          final scale = math
+              .min(constraints.maxWidth / 290, constraints.maxHeight / 569)
+              .clamp(.9, 1.5);
           return Stack(
             fit: StackFit.expand,
             children: [
               SingleChildScrollView(
                 child: Center(
                   child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 390),
+                    constraints: const BoxConstraints(maxWidth: 430),
                     child: Padding(
                       padding: EdgeInsets.fromLTRB(
-                        28,
-                        compact ? 40 : 58,
-                        28,
-                        22,
+                        28 * scale,
+                        40 * scale,
+                        28 * scale,
+                        22 * scale,
                       ),
                       child: Column(
                         children: [
-                          const LandingBrand(),
-                          SizedBox(height: compact ? 28 : 44),
-                          for (final action in <(String, VoidCallback)>[
-                            ('Employee Login', onEmployee),
-                            ('Client Login', onClient),
-                            ('Book an Appointment', onAppointment),
-                            ('Contact Us', onContact),
-                            ('Toolbox', onToolbox),
-                            ('Shop', onShop),
-                          ])
+                          SizedBox(
+                            width: 180 * scale,
+                            height: 93 * scale,
+                            child: const FittedBox(child: LandingBrand()),
+                          ),
+                          SizedBox(height: 42 * scale),
+                          for (final (index, action)
+                              in <(String, VoidCallback)>[
+                                ('Employee Login', onEmployee),
+                                ('Client Login', onClient),
+                                ('Book an Appointment', onAppointment),
+                                ('Contact Us', onContact),
+                                ('Toolbox', onToolbox),
+                                ('Shop', onShop),
+                              ].indexed)
                             Padding(
-                              padding: const EdgeInsets.only(bottom: 12),
+                              padding: EdgeInsets.only(
+                                bottom: index == 5 ? 0 : 12 * scale,
+                              ),
                               child: DecoratedBox(
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(9),
@@ -185,13 +196,13 @@ class LandingPage extends StatelessWidget {
                                 child: ElevatedButton(
                                   onPressed: action.$2,
                                   style: ElevatedButton.styleFrom(
-                                    minimumSize: const Size(
+                                    minimumSize: Size(
                                       double.infinity,
-                                      52,
+                                      52 * scale,
                                     ),
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 14,
-                                      vertical: 16,
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 14 * scale,
+                                      vertical: 16 * scale,
                                     ),
                                     backgroundColor: Colors.transparent,
                                     shadowColor: Colors.transparent,
@@ -199,8 +210,8 @@ class LandingPage extends StatelessWidget {
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(9),
                                     ),
-                                    textStyle: const TextStyle(
-                                      fontSize: 16,
+                                    textStyle: TextStyle(
+                                      fontSize: 16 * scale,
                                       fontWeight: FontWeight.w700,
                                     ),
                                   ),
