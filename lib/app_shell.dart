@@ -225,114 +225,122 @@ class _AppShellState extends State<AppShell> {
   @override
   Widget build(BuildContext context) => Theme(
     data: _dark ? ThemeData.dark(useMaterial3: true) : Theme.of(context),
-    child: PopScope(
-      canPop: _page == 2,
-      onPopInvokedWithResult: (didPop, result) {
-        if (!didPop && _page != 2) _back();
-      },
-      child: Scaffold(
-        appBar: _page == 2 || _page == 3
-            ? null
-            : AppBar(
-                leadingWidth: 48,
-                titleSpacing: 0,
-                backgroundColor: Colors.black,
-                foregroundColor: Colors.white,
-                title: Text(
-                  _page == 0 ? 'Shop' : 'About',
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                leading: _page == 1
-                    ? IconButton(
-                        tooltip: 'Back to Home',
-                        icon: const Icon(Icons.chevron_left),
-                        onPressed: () => _select(3),
-                      )
-                    : null,
-                actions: [QuickLinksMenu(onSelected: _openQuickLink)],
-              ),
-        drawer: _page == 0 ? _drawer() : null,
-        body: AnimatedSwitcher(
-          duration: MediaQuery.disableAnimationsOf(context)
-              ? Duration.zero
-              : const Duration(milliseconds: 420),
-          transitionBuilder: (child, animation) => SlideTransition(
-            position: Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero)
-                .animate(
-                  CurvedAnimation(
-                    parent: animation,
-                    curve: Curves.easeOutCubic,
-                  ),
-                ),
-            child: FadeTransition(opacity: animation, child: child),
-          ),
-          child: !_introFinished
-              ? LaunchIntro(
-                  key: const ValueKey('launch-intro'),
-                  afterIntro: widget.afterIntro,
-                  onFinished: () => setState(() => _introFinished = true),
-                )
-              : IndexedStack(
-                  key: const ValueKey('app-pages'),
-                  index: _page,
-                  children: [
-                    !_shopOpened
-                        ? const SizedBox.shrink()
-                        : widget.publicPageBuilder?.call(
-                                NavigationPolicy.websiteHome,
-                              ) ??
-                              PublicSiteView(
-                                uri: NavigationPolicy.websiteHome,
-                                onPageReady: widget.onPageReady,
-                                onBrowserCreated: (controller) =>
-                                    _homeController = controller,
-                              ),
-                    _aboutOpened
-                        ? widget.publicPageBuilder?.call(
-                                NavigationPolicy.websiteAbout,
-                              ) ??
-                              PublicSiteView(
-                                uri: NavigationPolicy.websiteAbout,
-                                onPageReady: widget.onPageReady,
-                                onBrowserCreated: (controller) =>
-                                    _aboutController = controller,
-                              )
-                        : const SizedBox.shrink(),
-                    _portal == null
-                        ? const SizedBox.shrink()
-                        : PortalSurface(
-                            initialUri: _portal,
-                            handleBack: _page == 2,
-                            navigationDrawer: _drawer(),
-                            onAbout: () => _select(1),
-                            onHome: () => _select(3),
-                            onBrowserCreated: (controller) =>
-                                _controller = controller,
-                            onPageReady: (controller) async {
-                              _controller = controller;
-                              await widget.onPageReady?.call(controller);
-                            },
-                          ),
-                    LandingPage(
-                      onEmployee: () => _openQuickLink(QuickLink.staff),
-                      onClient: () => _openQuickLink(QuickLink.customer),
-                      onAppointment: () => _openPortal(
-                        NavigationPolicy.publicBooking.toString(),
-                      ),
-                      onContact: () => _openPortal(
-                        NavigationPolicy.websiteHome
-                            .resolve('/contacts.php')
-                            .toString(),
-                      ),
-                      onToolbox: () => _openQuickLink(QuickLink.toolbox),
-                      onShop: () => _select(0),
-                      onSettings: _settings,
+    child: AnnotatedRegion<SystemUiOverlayStyle>(
+      value: _page == 3
+          ? SystemUiOverlayStyle.light
+          : SystemUiOverlayStyle.dark,
+      child: PopScope(
+        canPop: _page == 2,
+        onPopInvokedWithResult: (didPop, result) {
+          if (!didPop && _page != 2) _back();
+        },
+        child: Scaffold(
+          appBar: _page == 2 || _page == 3
+              ? null
+              : AppBar(
+                  leadingWidth: 48,
+                  titleSpacing: 0,
+                  backgroundColor: Colors.black,
+                  foregroundColor: Colors.white,
+                  title: Text(
+                    _page == 0 ? 'Shop' : 'About',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
                     ),
-                  ],
+                  ),
+                  leading: _page == 1
+                      ? IconButton(
+                          tooltip: 'Back to Home',
+                          icon: const Icon(Icons.chevron_left),
+                          onPressed: () => _select(3),
+                        )
+                      : null,
+                  actions: [QuickLinksMenu(onSelected: _openQuickLink)],
                 ),
+          drawer: _page == 0 ? _drawer() : null,
+          body: AnimatedSwitcher(
+            duration: MediaQuery.disableAnimationsOf(context)
+                ? Duration.zero
+                : const Duration(milliseconds: 420),
+            transitionBuilder: (child, animation) => SlideTransition(
+              position:
+                  Tween<Offset>(
+                    begin: const Offset(0, 1),
+                    end: Offset.zero,
+                  ).animate(
+                    CurvedAnimation(
+                      parent: animation,
+                      curve: Curves.easeOutCubic,
+                    ),
+                  ),
+              child: FadeTransition(opacity: animation, child: child),
+            ),
+            child: !_introFinished
+                ? LaunchIntro(
+                    key: const ValueKey('launch-intro'),
+                    afterIntro: widget.afterIntro,
+                    onFinished: () => setState(() => _introFinished = true),
+                  )
+                : IndexedStack(
+                    key: const ValueKey('app-pages'),
+                    index: _page,
+                    children: [
+                      !_shopOpened
+                          ? const SizedBox.shrink()
+                          : widget.publicPageBuilder?.call(
+                                  NavigationPolicy.websiteHome,
+                                ) ??
+                                PublicSiteView(
+                                  uri: NavigationPolicy.websiteHome,
+                                  onPageReady: widget.onPageReady,
+                                  onBrowserCreated: (controller) =>
+                                      _homeController = controller,
+                                ),
+                      _aboutOpened
+                          ? widget.publicPageBuilder?.call(
+                                  NavigationPolicy.websiteAbout,
+                                ) ??
+                                PublicSiteView(
+                                  uri: NavigationPolicy.websiteAbout,
+                                  onPageReady: widget.onPageReady,
+                                  onBrowserCreated: (controller) =>
+                                      _aboutController = controller,
+                                )
+                          : const SizedBox.shrink(),
+                      _portal == null
+                          ? const SizedBox.shrink()
+                          : PortalSurface(
+                              initialUri: _portal,
+                              handleBack: _page == 2,
+                              navigationDrawer: _drawer(),
+                              onAbout: () => _select(1),
+                              onHome: () => _select(3),
+                              onBrowserCreated: (controller) =>
+                                  _controller = controller,
+                              onPageReady: (controller) async {
+                                _controller = controller;
+                                await widget.onPageReady?.call(controller);
+                              },
+                            ),
+                      LandingPage(
+                        onEmployee: () => _openQuickLink(QuickLink.staff),
+                        onClient: () => _openQuickLink(QuickLink.customer),
+                        onAppointment: () => _openPortal(
+                          NavigationPolicy.publicBooking.toString(),
+                        ),
+                        onContact: () => _openPortal(
+                          NavigationPolicy.websiteHome
+                              .resolve('/contacts.php')
+                              .toString(),
+                        ),
+                        onToolbox: () => _openQuickLink(QuickLink.toolbox),
+                        onShop: () => _select(0),
+                        onSettings: _settings,
+                      ),
+                    ],
+                  ),
+          ),
         ),
       ),
     ),
