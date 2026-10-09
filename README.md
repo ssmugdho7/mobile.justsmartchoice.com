@@ -92,7 +92,7 @@ python3 tool/deploy-web.py
 This script targets only `/home2/scusawco/public_html/mobile`, backs up replaced
 files outside the public root, stages explicit files and checks APK integrity.
 It preserves `.htaccess`, `.well-known`, CRM source, uploads and databases.
-The command prints a rollback script location. The SSH key stays outside Git.
+Versioned APK URLs prevent stale CDN/browser downloads. The command prints a rollback script location. The SSH key stays outside Git.
 
 Keep SDK paths, generated outputs, signing keys, secrets and runtime/customer
 data out of commits. Release signing must be configured privately before public

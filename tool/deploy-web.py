@@ -8,6 +8,7 @@ import subprocess
 import tempfile
 import datetime
 import zipfile
+import re
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 HOST = 'scusawco@162.144.17.232'
@@ -15,6 +16,7 @@ DOCROOT = '/home2/scusawco/public_html/mobile'
 KEY = pathlib.Path.home() / '.ssh/id_ed25519'
 SSH = ['ssh', '-i', str(KEY), '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=15', HOST]
 APK = ROOT / 'dist/smart-choice-mobile-debug.apk'
+VERSION = re.search(r'^version: (\d+\.\d+\.\d+)\+', (ROOT/'pubspec.yaml').read_text(), re.M).group(1)
 
 def run(args, **kwargs):
     return subprocess.run(args, check=True, **kwargs)
@@ -53,15 +55,21 @@ chmod 700 {backup} {stage}
 ''')
 files = {'index.html': ROOT/'web/index.html', 'index.php': ROOT/'web/index.php',
          'downloads/.htaccess': ROOT/'web/downloads.htaccess',
-         'downloads/smart-choice-mobile.apk': APK}
+         'downloads/smart-choice-mobile.apk': APK,
+         f'downloads/smart-choice-mobile-{VERSION}.apk': APK}
 with tempfile.TemporaryDirectory() as td:
     release = pathlib.Path(td)/'release.json'
-    release.write_text(json.dumps({'version':'0.3.0', 'package':'com.justsmartchoice.mobile',
+    release.write_text(json.dumps({'version':VERSION, 'package':'com.justsmartchoice.mobile',
         'build':'debug-testing', 'commit':commit, 'sha256':sha(APK),
-        'download':'https://mobile.justsmartchoice.com/downloads/smart-choice-mobile.apk'}, indent=2)+'\n')
+        'download':f'https://mobile.justsmartchoice.com/downloads/smart-choice-mobile-{VERSION}.apk'}, indent=2)+'\n')
     files['release.json'] = release
     remote(f'mkdir -p {stage}/downloads\n')
+    uploaded = {}
     for rel, path in files.items():
+        if path in uploaded:
+            remote(f'cp {stage}/{uploaded[path]} {stage}/{rel}\n')
+            continue
+        uploaded[path] = rel
         run(['scp', '-i', str(KEY), '-o', 'BatchMode=yes', str(path), f'{HOST}:{stage}/{rel}'])
     # Explicit-file backup and atomic replacement. Rollback restores old contents
     # or removes only newly published files. Preserve SSL and unrelated user files.
