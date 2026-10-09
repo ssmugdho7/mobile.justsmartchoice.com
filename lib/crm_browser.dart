@@ -392,6 +392,9 @@ class _CrmBrowserState extends State<CrmBrowser> {
                       )
                     : null,
                 initialSettings: InAppWebViewSettings(
+                  // Retain server-issued sessions in the platform cookie store.
+                  incognito: false,
+                  sharedCookiesEnabled: true,
                   useShouldOverrideUrlLoading: true,
                   useShouldInterceptRequest: true,
                   useOnDownloadStart: true,

@@ -26,7 +26,9 @@ void main() {
           login: !!document.querySelector('input[type="password"]'),
           staff: !!document.querySelector('#side-menu'),
           customer: !!document.querySelector('.navbar.header'),
-          csrf: !!document.querySelector('input[name*="csrf"]')
+          csrf: !!document.querySelector('input[name*="csrf"]'),
+          passwordToggle: !!document.querySelector('.sc-auth-password button'),
+          remember: document.querySelector('#remember')?.value === '1'
         })''',
             );
             if (result is String) {
@@ -57,7 +59,11 @@ void main() {
       ),
     );
     final staff = observations.last;
-    if (staff['login'] == true) expect(staff['csrf'], isTrue);
+    if (staff['login'] == true) {
+      expect(staff['csrf'], isTrue);
+      expect(staff['passwordToggle'], isTrue);
+      expect(staff['remember'], isTrue);
+    }
     await tester.pump();
     final boundary =
         boundaryKey.currentContext!.findRenderObject()!
@@ -84,5 +90,9 @@ void main() {
       observations.every((r) => r['host'] == 'crm.justsmartchoice.com'),
       isTrue,
     );
+    if (observations.last['login'] == true) {
+      expect(observations.last['passwordToggle'], isTrue);
+      expect(observations.last['remember'], isTrue);
+    }
   });
 }

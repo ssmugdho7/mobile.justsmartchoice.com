@@ -109,6 +109,12 @@ This preview uses the same Flutter AppShell and navigation as the native app. Na
 
 The public website blocks cross-domain framing and asset loading. The browser preview therefore uses copies of the two public pages and their public assets under `preview_site/`. Refresh those with `node tool/refresh-public-pages.cjs` after a website design change. Preview forms cannot submit, links open the live website separately, and analytics/chat integrations are excluded. These preview files are not bundled into Android APKs. No CRM sessions or private content are copied. Native downloads, uploads, permissions and video calls still require emulator/device testing.
 
+The installed app loads the live public website, including its Resources/Legal footer, customer chat widget and Smart Choice Assistant (Support, Estimate and Book Appointment). Those remain website features and are not duplicated or replaced by native mock chat. The browser design preview does not send real chat messages.
+
+CRM password visibility and Remember me use the same server implementation on web and mobile: an 8-hour workday session and the user's selected 7-day remembered login. Native WebViews retain cookies in the platform store and share them between app views; passwords are never saved in Flutter preferences. Logout is handled by the CRM and revokes its device token. After upgrading old remembered cookies, users must sign in once to establish the new bounded token.
+
+`integration_test/live_mobile_features_test.dart` checks live public footer/assistant controls and a disposable persistent cookie across WebView recreation without logging in, sending chat, or touching CRM cookies.
+
 The download site's source is now `website/`; `web/` is Flutter's browser build scaffold. Keep those deployment targets separate.
 
 ## Apple release preparation
