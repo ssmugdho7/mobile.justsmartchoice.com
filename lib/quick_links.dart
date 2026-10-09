@@ -34,6 +34,9 @@ enum QuickLink {
     for (final link in values) {
       if (link.uri == uri) return link.label;
     }
+    if (uri?.host == 'justsmartchoice.com' && uri?.path == '/contacts.php') {
+      return 'Contact Us';
+    }
     return 'CRM';
   }
 }

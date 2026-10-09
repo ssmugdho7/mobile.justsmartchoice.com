@@ -8,8 +8,7 @@ import 'startup_permissions.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await StartupPermissions.initialize();
-  runApp(const SmartChoiceApp());
+  runApp(SmartChoiceApp(afterIntro: StartupPermissions.initialize));
 }
 
 class SmartChoiceApp extends StatelessWidget {
@@ -19,7 +18,9 @@ class SmartChoiceApp extends StatelessWidget {
     this.initialUri,
     this.startInPortal = false,
     this.publicPageBuilder,
+    this.afterIntro,
   });
+  final Future<void> Function()? afterIntro;
   final Uri? initialUri;
   final bool startInPortal;
   final Widget Function(Uri)? publicPageBuilder;
@@ -32,6 +33,7 @@ class SmartChoiceApp extends StatelessWidget {
     home: startInPortal
         ? CrmBrowser(onPageReady: onPageReady, initialUri: initialUri)
         : AppShell(
+            afterIntro: afterIntro,
             onPageReady: onPageReady,
             publicPageBuilder: publicPageBuilder,
           ),

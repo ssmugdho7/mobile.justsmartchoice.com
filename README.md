@@ -29,7 +29,7 @@ an Android 10+ ARM64 **debug-signed testing build**, not a Play Store release.
 
 ## Behavior and safeguards
 
-- Home and About pages with drawer navigation. Opening either preserves the CRM WebView session.
+- A short centered logo intro leads to the six-button Home menu: Employee Login, Client Login, Book an Appointment, Contact Us, Toolbox and Shop. Settings opens Dark Mode and About. Shop opens the existing public homepage; it is not loaded before selection. Returning Home does not replay the intro. Website/CRM navigation preserves the CRM WebView session. Reduced-motion users skip the intro and transition.
 - CRM-colored toolbar: back/close, refresh, staff/customer portal switch and info.
 - Server login, cookies, CSRF, roles and ownership checks remain authoritative.
 - CRM and `meet.jit.si` stay inside the app. Other HTTPS, phone and email links
@@ -103,9 +103,9 @@ and cannot be upgraded by this APK.
 
 Run `./tool/run.sh -d <android-device-id>` once, then press `r` in that terminal after editing Dart code to hot reload. Press `R` for a full restart. Native Kotlin/Swift or plugin changes need a rebuild; ordinary Flutter screen changes do not need another APK download. `flutter devices` lists connected devices.
 
-The shared Home/About/navigation interface has a browser entry point: `lib/preview_main.dart`. Build with `./tool/build-preview.sh --base-href /` and serve `build/web` locally for a complete browser preview. Successful `dev` pushes automatically build and publish it through `.github/workflows/preview.yml` to GitHub Pages. Client link: https://mobile.justsmartchoice.com/preview/ . Refresh that link after the workflow completes; the header identifies the source commit and build time.
+The shared launch/Home menu/Shop/About interface has a browser entry point: `lib/preview_main.dart`. Build with `./tool/build-preview.sh --base-href /` and serve `build/web` locally for a complete browser preview. Successful `dev` pushes automatically build and publish it through `.github/workflows/preview.yml` to GitHub Pages. Client link: https://mobile.justsmartchoice.com/preview/ . Refresh that link after the workflow completes; the header identifies the source commit and build time.
 
-This preview uses the same Flutter AppShell and navigation as the native app. Native Home loads `https://justsmartchoice.com/`; About loads `https://justsmartchoice.com/about.php`, fixing the original APK's malformed `http://about.php/`. The original black header, logo drawer and Dark Mode switch are restored. CRM shortcuts remain under the header's portal menu. Dark Mode controls the app chrome; website content retains its own design.
+This preview uses the same Flutter AppShell and navigation as the native app. Native Shop loads `https://justsmartchoice.com/`; About loads `https://justsmartchoice.com/about.php`, fixing the original APK's malformed `http://about.php/`. The original black header, logo drawer and Dark Mode switch are restored. CRM shortcuts remain under the header's portal menu. Dark Mode controls the app chrome; website content retains its own design.
 
 The public website blocks cross-domain framing and asset loading. The browser preview therefore uses copies of the two public pages and their public assets under `preview_site/`. Refresh those with `node tool/refresh-public-pages.cjs` after a website design change. Preview forms cannot submit, links open the live website separately, and analytics/chat integrations are excluded. These preview files are not bundled into Android APKs. No CRM sessions or private content are copied. Native downloads, uploads, permissions and video calls still require emulator/device testing.
 

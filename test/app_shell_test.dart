@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:smart_choice_mobile/main.dart';
+import 'package:smart_choice_mobile/launch_intro.dart';
 
 Widget publicPage(Uri uri) => Text('Public page: $uri');
 
@@ -10,7 +11,13 @@ void main() {
   ) async {
     await tester.pumpWidget(SmartChoiceApp(publicPageBuilder: publicPage));
     await tester.pumpAndSettle();
-    expect(find.text('Smart Choice USA'), findsOneWidget);
+    expect(find.text('Employee Login'), findsOneWidget);
+    expect(
+      find.text('Public page: https://justsmartchoice.com/'),
+      findsNothing,
+    );
+    await tester.tap(find.text('Shop'));
+    await tester.pumpAndSettle();
     expect(
       find.text('Public page: https://justsmartchoice.com/'),
       findsOneWidget,
@@ -30,6 +37,9 @@ void main() {
       findsOneWidget,
     );
     await tester.tap(find.byTooltip('Back to Home'));
+    await tester.pumpAndSettle();
+    expect(find.text('Employee Login'), findsOneWidget);
+    await tester.tap(find.text('Shop'));
     await tester.pumpAndSettle();
     expect(
       find.text('Public page: https://justsmartchoice.com/'),
@@ -55,7 +65,7 @@ void main() {
       addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
       await tester.pumpWidget(SmartChoiceApp(publicPageBuilder: publicPage));
       await tester.pumpAndSettle();
-      await tester.tap(find.byTooltip('Open navigation menu'));
+      await tester.tap(find.byTooltip('App settings'));
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
       await tester.tap(find.widgetWithText(ListTile, 'About'));
@@ -63,4 +73,52 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+  testWidgets('launch precedes menu; Shop is lazy and back returns to menu', (
+    tester,
+  ) async {
+    var builds = 0;
+    await tester.pumpWidget(
+      SmartChoiceApp(
+        publicPageBuilder: (uri) {
+          builds++;
+          return publicPage(uri);
+        },
+      ),
+    );
+    expect(find.byType(LaunchIntro), findsOneWidget);
+    expect(find.text('Employee Login'), findsNothing);
+    expect(builds, 0);
+    await tester.pumpAndSettle();
+    for (final label in [
+      'Employee Login',
+      'Client Login',
+      'Book an Appointment',
+      'Contact Us',
+      'Toolbox',
+      'Shop',
+    ]) {
+      expect(find.text(label), findsOneWidget);
+    }
+    expect(builds, 0);
+    await tester.tap(find.text('Shop'));
+    await tester.pumpAndSettle();
+    expect(
+      find.text('Public page: https://justsmartchoice.com/'),
+      findsOneWidget,
+    );
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.text('Employee Login'), findsOneWidget);
+    expect(find.byType(LaunchIntro), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+  testWidgets('reduced motion skips the timed intro', (tester) async {
+    tester.platformDispatcher.accessibilityFeaturesTestValue =
+        const FakeAccessibilityFeatures(disableAnimations: true);
+    addTearDown(tester.platformDispatcher.clearAccessibilityFeaturesTestValue);
+    await tester.pumpWidget(SmartChoiceApp(publicPageBuilder: publicPage));
+    await tester.pumpAndSettle();
+    expect(find.text('Shop'), findsOneWidget);
+    expect(find.byType(LaunchIntro), findsNothing);
+  });
 }

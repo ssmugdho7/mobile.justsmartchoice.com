@@ -162,7 +162,7 @@ class _CrmBrowserState extends State<CrmBrowser> {
   void _info() => showAboutDialog(
     context: context,
     applicationName: 'Smart Choice Mobile',
-    applicationVersion: '0.4.0',
+    applicationVersion: '0.5.0',
     children: const [
       Text(
         'CRM: crm.justsmartchoice.com\nApp downloads: mobile.justsmartchoice.com\nUses your existing CRM account and records.',

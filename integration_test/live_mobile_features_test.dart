@@ -17,6 +17,9 @@ void main() {
           onPageReady: (controller) async => publicPage = controller,
         ),
       );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Shop'));
+      await tester.pump();
       final deadline = DateTime.now().add(const Duration(seconds: 45));
       while (publicPage == null && DateTime.now().isBefore(deadline)) {
         await tester.runAsync(
@@ -71,6 +74,9 @@ void main() {
         await tester.pumpWidget(const MaterialApp(home: SizedBox()));
         await tester.pump();
         await tester.pumpWidget(const SmartChoiceApp());
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Shop'));
+        await tester.pump();
         final remembered = await cookies.getCookie(url: url, name: name);
         expect(remembered?.value, 'disposable-fixture');
       } finally {

@@ -10,17 +10,27 @@ import 'public_site_native.dart'
     if (dart.library.js_interop) 'public_site_web.dart';
 import 'navigation_policy.dart';
 import 'quick_links.dart';
+import 'landing_page.dart';
+import 'launch_intro.dart';
 
 class AppShell extends StatefulWidget {
-  const AppShell({super.key, this.onPageReady, this.publicPageBuilder});
+  const AppShell({
+    super.key,
+    this.onPageReady,
+    this.publicPageBuilder,
+    this.afterIntro,
+  });
   final Widget Function(Uri)? publicPageBuilder;
+  final Future<void> Function()? afterIntro;
   final Future<void> Function(InAppWebViewController)? onPageReady;
   @override
   State<AppShell> createState() => _AppShellState();
 }
 
 class _AppShellState extends State<AppShell> {
-  int _page = 0;
+  int _page = 3;
+  bool _introFinished = false;
+  bool _shopOpened = false;
   bool _dark = false;
   bool _aboutOpened = false;
   Uri? _portal;
@@ -28,14 +38,16 @@ class _AppShellState extends State<AppShell> {
   InAppWebViewController? _homeController;
   InAppWebViewController? _aboutController;
   Future<void> _back() async {
-    final controller = _page == 1 ? _aboutController : _homeController;
+    final controller = _page == 1
+        ? _aboutController
+        : (_page == 0 ? _homeController : null);
     if (await controller?.canGoBack() ?? false) {
       await controller!.goBack();
       return;
     }
     if (!mounted) return;
-    if (_page == 1) {
-      _select(0);
+    if (_page == 1 || _page == 0) {
+      _select(3);
       return;
     }
     final close = await showDialog<bool>(
@@ -82,6 +94,7 @@ class _AppShellState extends State<AppShell> {
   void _select(int page) => setState(() {
     _page = page;
     if (page == 1) _aboutOpened = true;
+    if (page == 0) _shopOpened = true;
   });
   Future<void> _openPortal(String path) async {
     final uri = NavigationPolicy.home.resolve(path);
@@ -115,6 +128,45 @@ class _AppShellState extends State<AppShell> {
     await _openPortal(link.destination);
   }
 
+  Future<void> _settings() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (context, updateSheet) => SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const ListTile(
+                title: Text(
+                  'App settings',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+              SwitchListTile(
+                title: const Text('Dark Mode'),
+                value: _dark,
+                onChanged: (value) {
+                  _setDark(value);
+                  updateSheet(() {});
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.info_outline),
+                title: const Text('About'),
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  _select(1);
+                },
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _drawer() => Drawer(
     backgroundColor: _dark ? const Color(0xff202020) : Colors.white,
     shape: const RoundedRectangleBorder(),
@@ -142,7 +194,8 @@ class _AppShellState extends State<AppShell> {
               ],
             ),
           ),
-          _navItem(Icons.home, 'Home', () => _select(0)),
+          _navItem(Icons.home, 'Home', () => _select(3)),
+          _navItem(Icons.shopping_bag_outlined, 'Shop', () => _select(0)),
           _navItem(Icons.info_outline, 'About', () => _select(1)),
           const Divider(thickness: 3, height: 24),
           SwitchListTile(
@@ -178,7 +231,7 @@ class _AppShellState extends State<AppShell> {
         if (!didPop && _page != 2) _back();
       },
       child: Scaffold(
-        appBar: _page == 2
+        appBar: _page == 2 || _page == 3
             ? null
             : AppBar(
                 leadingWidth: 48,
@@ -186,7 +239,7 @@ class _AppShellState extends State<AppShell> {
                 backgroundColor: Colors.black,
                 foregroundColor: Colors.white,
                 title: Text(
-                  _page == 0 ? 'Smart Choice USA' : 'About',
+                  _page == 0 ? 'Shop' : 'About',
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
@@ -196,48 +249,89 @@ class _AppShellState extends State<AppShell> {
                     ? IconButton(
                         tooltip: 'Back to Home',
                         icon: const Icon(Icons.chevron_left),
-                        onPressed: () => _select(0),
+                        onPressed: () => _select(3),
                       )
                     : null,
                 actions: [QuickLinksMenu(onSelected: _openQuickLink)],
               ),
         drawer: _page == 0 ? _drawer() : null,
-        body: IndexedStack(
-          index: _page,
-          children: [
-            widget.publicPageBuilder?.call(NavigationPolicy.websiteHome) ??
-                PublicSiteView(
-                  uri: NavigationPolicy.websiteHome,
-                  onPageReady: widget.onPageReady,
-                  onBrowserCreated: (controller) =>
-                      _homeController = controller,
-                ),
-            _aboutOpened
-                ? widget.publicPageBuilder?.call(
-                        NavigationPolicy.websiteAbout,
-                      ) ??
-                      PublicSiteView(
-                        uri: NavigationPolicy.websiteAbout,
-                        onPageReady: widget.onPageReady,
-                        onBrowserCreated: (controller) =>
-                            _aboutController = controller,
-                      )
-                : const SizedBox.shrink(),
-            _portal == null
-                ? const SizedBox.shrink()
-                : PortalSurface(
-                    initialUri: _portal,
-                    handleBack: _page == 2,
-                    navigationDrawer: _drawer(),
-                    onAbout: () => _select(1),
-                    onHome: () => _select(0),
-                    onBrowserCreated: (controller) => _controller = controller,
-                    onPageReady: (controller) async {
-                      _controller = controller;
-                      await widget.onPageReady?.call(controller);
-                    },
+        body: AnimatedSwitcher(
+          duration: MediaQuery.disableAnimationsOf(context)
+              ? Duration.zero
+              : const Duration(milliseconds: 420),
+          transitionBuilder: (child, animation) => SlideTransition(
+            position: Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero)
+                .animate(
+                  CurvedAnimation(
+                    parent: animation,
+                    curve: Curves.easeOutCubic,
                   ),
-          ],
+                ),
+            child: FadeTransition(opacity: animation, child: child),
+          ),
+          child: !_introFinished
+              ? LaunchIntro(
+                  key: const ValueKey('launch-intro'),
+                  afterIntro: widget.afterIntro,
+                  onFinished: () => setState(() => _introFinished = true),
+                )
+              : IndexedStack(
+                  key: const ValueKey('app-pages'),
+                  index: _page,
+                  children: [
+                    !_shopOpened
+                        ? const SizedBox.shrink()
+                        : widget.publicPageBuilder?.call(
+                                NavigationPolicy.websiteHome,
+                              ) ??
+                              PublicSiteView(
+                                uri: NavigationPolicy.websiteHome,
+                                onPageReady: widget.onPageReady,
+                                onBrowserCreated: (controller) =>
+                                    _homeController = controller,
+                              ),
+                    _aboutOpened
+                        ? widget.publicPageBuilder?.call(
+                                NavigationPolicy.websiteAbout,
+                              ) ??
+                              PublicSiteView(
+                                uri: NavigationPolicy.websiteAbout,
+                                onPageReady: widget.onPageReady,
+                                onBrowserCreated: (controller) =>
+                                    _aboutController = controller,
+                              )
+                        : const SizedBox.shrink(),
+                    _portal == null
+                        ? const SizedBox.shrink()
+                        : PortalSurface(
+                            initialUri: _portal,
+                            handleBack: _page == 2,
+                            navigationDrawer: _drawer(),
+                            onAbout: () => _select(1),
+                            onHome: () => _select(3),
+                            onBrowserCreated: (controller) =>
+                                _controller = controller,
+                            onPageReady: (controller) async {
+                              _controller = controller;
+                              await widget.onPageReady?.call(controller);
+                            },
+                          ),
+                    LandingPage(
+                      onEmployee: () => _openQuickLink(QuickLink.staff),
+                      onClient: () => _openQuickLink(QuickLink.customer),
+                      onAppointment: () =>
+                          _openQuickLink(QuickLink.appointment),
+                      onContact: () => _openPortal(
+                        NavigationPolicy.websiteHome
+                            .resolve('/contacts.php')
+                            .toString(),
+                      ),
+                      onToolbox: () => _openQuickLink(QuickLink.toolbox),
+                      onShop: () => _select(0),
+                      onSettings: _settings,
+                    ),
+                  ],
+                ),
         ),
       ),
     ),

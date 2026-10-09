@@ -27,8 +27,8 @@ class StartupPermissions {
 
   static Future<void> initialize() async {
     if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) return;
-    final preferences = SharedPreferencesAsync();
     try {
+      final preferences = SharedPreferencesAsync();
       await StartupPermissions(
         hasCompleted: () async =>
             await preferences.getBool('startupPermissionsCompleted') ?? false,
