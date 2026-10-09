@@ -5,7 +5,7 @@
     if (document.getElementById('sc-native-shell-style')) return;
     const style = document.createElement('style');
     style.id = 'sc-native-shell-style';
-    style.textContent = '.page-header,.page > .section-banner:first-child{display:none!important}';
+    style.textContent = '.page-header,.page > .section-banner:first-child{display:none!important}@media(max-width:400px){.swiper-slide .swiper-slide-caption .cta-box-heading{font-size:clamp(26px,8vw,32px)!important}}';
     (document.head || document.documentElement).appendChild(style);
   }
   apply();
