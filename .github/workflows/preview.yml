@@ -25,7 +25,7 @@ jobs:
       - run: ./tool/check.sh
       - uses: actions/configure-pages@v5
       - name: Build shared Flutter interface
-        run: flutter build web --target lib/preview_main.dart --base-href /mobile.justsmartchoice.com/ --dart-define=PREVIEW_COMMIT=${GITHUB_SHA:0:7} --dart-define=PREVIEW_DATE="$(date -u +%Y-%m-%dT%H:%MZ)"
+        run: ./tool/build-preview.sh --base-href /mobile.justsmartchoice.com/ --dart-define=PREVIEW_COMMIT=${GITHUB_SHA:0:7} --dart-define=PREVIEW_DATE="$(date -u +%Y-%m-%dT%H:%MZ)"
       - uses: actions/upload-pages-artifact@v3
         with:
           path: build/web

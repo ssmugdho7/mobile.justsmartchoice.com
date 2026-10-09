@@ -9,5 +9,6 @@ class PortalSurface extends CrmBrowser {
     super.onHome,
     super.onBrowserCreated,
     super.onPageReady,
+    super.handleBack,
   });
 }

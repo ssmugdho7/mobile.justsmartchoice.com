@@ -5,6 +5,16 @@ import 'package:smart_choice_mobile/document_download.dart';
 void main() {
   test('Existing CRM routes and Jitsi rooms stay in the app', () {
     expect(
+      NavigationPolicy.decide(NavigationPolicy.websiteHome),
+      NavigationDecision.internal,
+    );
+    expect(
+      NavigationPolicy.decide(NavigationPolicy.websiteAbout),
+      NavigationDecision.internal,
+    );
+    expect(NavigationPolicy.canUseMedia(NavigationPolicy.websiteHome), isFalse);
+    expect(NavigationPolicy.isCrm(NavigationPolicy.websiteHome), isFalse);
+    expect(
       NavigationPolicy.decide(NavigationPolicy.home),
       NavigationDecision.internal,
     );

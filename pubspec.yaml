@@ -1,7 +1,7 @@
 name: smart_choice_mobile
 description: Editable Android app for the Smart Choice mobile CRM.
 publish_to: none
-version: 0.3.0+3
+version: 0.4.0+4
 environment:
   sdk: ^3.13.5
 dependencies:
@@ -11,6 +11,8 @@ dependencies:
   permission_handler: ^12.0.1
   url_launcher: ^6.3.2
   path_provider: ^2.1.5
+  web: ^1.1.1
+  shared_preferences: ^2.5.6
 dev_dependencies:
   integration_test:
     sdk: flutter
@@ -21,3 +23,5 @@ flutter:
   uses-material-design: true
   assets:
     - assets/pdf_download_bridge.js
+    - assets/public_site_shell.js
+    - assets/brand/smart-choice-logo.png

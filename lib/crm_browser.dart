@@ -22,8 +22,12 @@ class CrmBrowser extends StatefulWidget {
     this.onAbout,
     this.onHome,
     this.onBrowserCreated,
+    this.showAppBar = true,
+    this.handleBack = true,
   });
   final int? windowId;
+  final bool showAppBar;
+  final bool handleBack;
   final Widget? navigationDrawer;
   final VoidCallback? onAbout;
   final VoidCallback? onHome;
@@ -45,16 +49,18 @@ class _CrmBrowserState extends State<CrmBrowser> {
     super.initState();
     // Do not log session URLs or PDF bridge payloads, including debug builds.
     PlatformInAppWebViewController.debugLoggingSettings.enabled = false;
-    rootBundle.loadString('assets/pdf_download_bridge.js').then((source) {
+    Future.wait([
+      rootBundle.loadString('assets/pdf_download_bridge.js'),
+      rootBundle.loadString('assets/public_site_shell.js'),
+    ]).then((sources) {
       if (mounted) {
-        setState(
-          () => _pdfScript = source
-              .replaceAll('"__SC_NONCE__"', jsonEncode(_bridgeNonce))
-              .replaceAll(
-                '"__SC_ORIGIN__"',
-                jsonEncode(NavigationPolicy.home.origin),
-              ),
-        );
+        final pdfSource = sources[0]
+            .replaceAll('"__SC_NONCE__"', jsonEncode(_bridgeNonce))
+            .replaceAll(
+              '"__SC_ORIGIN__"',
+              jsonEncode(NavigationPolicy.home.origin),
+            );
+        setState(() => _pdfScript = '$pdfSource\n${sources[1]}');
       }
     });
   }
@@ -275,77 +281,87 @@ class _CrmBrowserState extends State<CrmBrowser> {
 
   @override
   Widget build(BuildContext context) => PopScope(
-    canPop: widget.windowId != null,
+    canPop: !widget.handleBack || widget.windowId != null,
     onPopInvokedWithResult: (didPop, result) {
-      if (!didPop) _back();
+      if (!didPop && widget.handleBack) _back();
     },
     child: Scaffold(
       drawer: widget.navigationDrawer,
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        leading: IconButton(
-          tooltip: widget.windowId != null ? 'Close window' : 'Back',
-          icon: Icon(widget.windowId != null ? Icons.close : Icons.arrow_back),
-          onPressed: widget.windowId != null
-              ? () => Navigator.of(context).pop()
-              : _back,
-        ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Smart Choice',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
-            ),
-            if (MediaQuery.textScalerOf(context).scale(1) <= 1.3)
-              const Text(
-                'Mobile CRM',
-                style: TextStyle(fontSize: 11, color: Color(0xff64748b)),
+      appBar: !widget.showAppBar
+          ? null
+          : AppBar(
+              automaticallyImplyLeading: false,
+              leading: IconButton(
+                tooltip: widget.windowId != null ? 'Close window' : 'Back',
+                icon: Icon(
+                  widget.windowId != null ? Icons.close : Icons.arrow_back,
+                ),
+                onPressed: widget.windowId != null
+                    ? () => Navigator.of(context).pop()
+                    : _back,
               ),
-          ],
-        ),
-        actions: [
-          if (widget.navigationDrawer != null)
-            Builder(
-              builder: (context) => IconButton(
-                tooltip: 'Open navigation',
-                icon: const Icon(Icons.menu),
-                onPressed: () => Scaffold.of(context).openDrawer(),
+              title: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Smart Choice',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+                  ),
+                  if (MediaQuery.textScalerOf(context).scale(1) <= 1.3)
+                    const Text(
+                      'Mobile CRM',
+                      style: TextStyle(fontSize: 11, color: Color(0xff64748b)),
+                    ),
+                ],
               ),
+              actions: [
+                if (widget.navigationDrawer != null)
+                  Builder(
+                    builder: (context) => IconButton(
+                      tooltip: 'Open navigation',
+                      icon: const Icon(Icons.menu),
+                      onPressed: () => Scaffold.of(context).openDrawer(),
+                    ),
+                  ),
+                if (_downloading)
+                  const Padding(
+                    padding: EdgeInsets.all(16),
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  ),
+                IconButton(
+                  tooltip: 'Reload page',
+                  icon: const Icon(Icons.refresh),
+                  onPressed: _retry,
+                ),
+                PopupMenuButton<String>(
+                  tooltip: 'Choose CRM portal',
+                  onSelected: (value) {
+                    if (value == 'about') {
+                      (widget.onAbout ?? _info)();
+                    } else {
+                      _portal(value);
+                    }
+                  },
+                  itemBuilder: (_) => const [
+                    PopupMenuItem(value: '/admin', child: Text('Staff portal')),
+                    PopupMenuItem(
+                      value: '/clients',
+                      child: Text('Customer portal'),
+                    ),
+                    PopupMenuItem(
+                      value: 'about',
+                      child: Text('App information'),
+                    ),
+                  ],
+                ),
+              ],
             ),
-          if (_downloading)
-            const Padding(
-              padding: EdgeInsets.all(16),
-              child: SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
-            ),
-          IconButton(
-            tooltip: 'Reload page',
-            icon: const Icon(Icons.refresh),
-            onPressed: _retry,
-          ),
-          PopupMenuButton<String>(
-            tooltip: 'Choose CRM portal',
-            onSelected: (value) {
-              if (value == 'about') {
-                (widget.onAbout ?? _info)();
-              } else {
-                _portal(value);
-              }
-            },
-            itemBuilder: (_) => const [
-              PopupMenuItem(value: '/admin', child: Text('Staff portal')),
-              PopupMenuItem(value: '/clients', child: Text('Customer portal')),
-              PopupMenuItem(value: 'about', child: Text('App information')),
-            ],
-          ),
-        ],
-      ),
       body: SafeArea(
         top: false,
         child: Stack(
@@ -366,7 +382,9 @@ class _CrmBrowserState extends State<CrmBrowser> {
                     ? URLRequest(
                         url: WebUri(
                           (widget.initialUri != null &&
-                                      NavigationPolicy.isCrm(widget.initialUri!)
+                                      NavigationPolicy.isAppPage(
+                                        widget.initialUri!,
+                                      )
                                   ? widget.initialUri!
                                   : NavigationPolicy.home)
                               .toString(),
@@ -415,14 +433,14 @@ class _CrmBrowserState extends State<CrmBrowser> {
                       NavigationDecision.internal) {
                     await controller.stopLoading();
                     _message(
-                      'This app only opens the mobile CRM and its meeting rooms.',
+                      'This app opens the Smart Choice website, CRM and meeting rooms.',
                     );
                     if (widget.windowId == null) {
                       await controller.loadUrl(
                         urlRequest: URLRequest(
                           url: WebUri(
                             (widget.initialUri != null &&
-                                        NavigationPolicy.isCrm(
+                                        NavigationPolicy.isAppPage(
                                           widget.initialUri!,
                                         )
                                     ? widget.initialUri!

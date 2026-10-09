@@ -4,9 +4,11 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'crm_browser.dart';
 import 'app_shell.dart';
 import 'app_theme.dart';
+import 'startup_permissions.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await StartupPermissions.initialize();
   runApp(const SmartChoiceApp());
 }
 
@@ -16,9 +18,11 @@ class SmartChoiceApp extends StatelessWidget {
     this.onPageReady,
     this.initialUri,
     this.startInPortal = false,
+    this.publicPageBuilder,
   });
   final Uri? initialUri;
   final bool startInPortal;
+  final Widget Function(Uri)? publicPageBuilder;
   final Future<void> Function(InAppWebViewController)? onPageReady;
   @override
   Widget build(BuildContext context) => MaterialApp(
@@ -27,6 +31,9 @@ class SmartChoiceApp extends StatelessWidget {
     theme: smartChoiceTheme(),
     home: startInPortal
         ? CrmBrowser(onPageReady: onPageReady, initialUri: initialUri)
-        : AppShell(onPageReady: onPageReady),
+        : AppShell(
+            onPageReady: onPageReady,
+            publicPageBuilder: publicPageBuilder,
+          ),
   );
 }

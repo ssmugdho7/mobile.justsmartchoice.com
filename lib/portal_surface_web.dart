@@ -12,8 +12,10 @@ class PortalSurface extends StatelessWidget {
     this.onHome,
     this.onBrowserCreated,
     this.onPageReady,
+    this.handleBack = true,
   });
   final Uri? initialUri;
+  final bool handleBack;
   final Widget? navigationDrawer;
   final VoidCallback? onAbout, onHome;
   final void Function(InAppWebViewController)? onBrowserCreated;
