@@ -18,8 +18,16 @@ class CrmBrowser extends StatefulWidget {
     this.windowId,
     this.onPageReady,
     this.initialUri,
+    this.navigationDrawer,
+    this.onAbout,
+    this.onHome,
+    this.onBrowserCreated,
   });
   final int? windowId;
+  final Widget? navigationDrawer;
+  final VoidCallback? onAbout;
+  final VoidCallback? onHome;
+  final void Function(InAppWebViewController)? onBrowserCreated;
   final Uri? initialUri;
   final Future<void> Function(InAppWebViewController)? onPageReady;
   @override
@@ -134,7 +142,7 @@ class _CrmBrowserState extends State<CrmBrowser> {
   void _info() => showAboutDialog(
     context: context,
     applicationName: 'Smart Choice Mobile',
-    applicationVersion: '0.2.0',
+    applicationVersion: '0.3.0',
     children: const [
       Text(
         'CRM: crm.justsmartchoice.com\nApp downloads: mobile.justsmartchoice.com\nUses your existing CRM account and records.',
@@ -150,6 +158,10 @@ class _CrmBrowserState extends State<CrmBrowser> {
     if (!mounted) return;
     if (widget.windowId != null) {
       Navigator.of(context).pop();
+      return;
+    }
+    if (widget.onHome != null) {
+      widget.onHome!();
       return;
     }
     final leave = await showDialog<bool>(
@@ -268,6 +280,7 @@ class _CrmBrowserState extends State<CrmBrowser> {
       if (!didPop) _back();
     },
     child: Scaffold(
+      drawer: widget.navigationDrawer,
       appBar: AppBar(
         automaticallyImplyLeading: false,
         leading: IconButton(
@@ -294,6 +307,14 @@ class _CrmBrowserState extends State<CrmBrowser> {
           ],
         ),
         actions: [
+          if (widget.navigationDrawer != null)
+            Builder(
+              builder: (context) => IconButton(
+                tooltip: 'Open navigation',
+                icon: const Icon(Icons.menu),
+                onPressed: () => Scaffold.of(context).openDrawer(),
+              ),
+            ),
           if (_downloading)
             const Padding(
               padding: EdgeInsets.all(16),
@@ -312,7 +333,7 @@ class _CrmBrowserState extends State<CrmBrowser> {
             tooltip: 'Choose CRM portal',
             onSelected: (value) {
               if (value == 'about') {
-                _info();
+                (widget.onAbout ?? _info)();
               } else {
                 _portal(value);
               }
@@ -366,6 +387,7 @@ class _CrmBrowserState extends State<CrmBrowser> {
                 ),
                 onWebViewCreated: (controller) {
                   _web = controller;
+                  widget.onBrowserCreated?.call(controller);
                   controller.addJavaScriptHandler(
                     handlerName: 'scExportPdf',
                     callback: _exportPdf,

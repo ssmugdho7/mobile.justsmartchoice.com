@@ -18,6 +18,7 @@ void main() {
       RepaintBoundary(
         key: boundaryKey,
         child: SmartChoiceApp(
+          startInPortal: true,
           onPageReady: (controller) async {
             final result = await controller.evaluateJavascript(
               source: '''JSON.stringify({

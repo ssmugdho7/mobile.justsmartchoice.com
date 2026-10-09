@@ -56,7 +56,7 @@ files = {'index.html': ROOT/'web/index.html', 'index.php': ROOT/'web/index.php',
          'downloads/smart-choice-mobile.apk': APK}
 with tempfile.TemporaryDirectory() as td:
     release = pathlib.Path(td)/'release.json'
-    release.write_text(json.dumps({'version':'0.2.0', 'package':'com.justsmartchoice.mobile',
+    release.write_text(json.dumps({'version':'0.3.0', 'package':'com.justsmartchoice.mobile',
         'build':'debug-testing', 'commit':commit, 'sha256':sha(APK),
         'download':'https://mobile.justsmartchoice.com/downloads/smart-choice-mobile.apk'}, indent=2)+'\n')
     files['release.json'] = release

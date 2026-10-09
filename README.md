@@ -29,6 +29,7 @@ an Android 10+ ARM64 **debug-signed testing build**, not a Play Store release.
 
 ## Behavior and safeguards
 
+- Home and About pages with drawer navigation. Opening either preserves the CRM WebView session.
 - CRM-colored toolbar: back/close, refresh, staff/customer portal switch and info.
 - Server login, cookies, CSRF, roles and ownership checks remain authoritative.
 - CRM and `meet.jit.si` stay inside the app. Other HTTPS, phone and email links

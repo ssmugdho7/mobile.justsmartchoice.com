@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 
 import 'crm_browser.dart';
+import 'app_shell.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -9,8 +10,14 @@ void main() {
 }
 
 class SmartChoiceApp extends StatelessWidget {
-  const SmartChoiceApp({super.key, this.onPageReady, this.initialUri});
+  const SmartChoiceApp({
+    super.key,
+    this.onPageReady,
+    this.initialUri,
+    this.startInPortal = false,
+  });
   final Uri? initialUri;
+  final bool startInPortal;
   final Future<void> Function(InAppWebViewController)? onPageReady;
   @override
   Widget build(BuildContext context) => MaterialApp(
@@ -27,6 +34,8 @@ class SmartChoiceApp extends StatelessWidget {
         elevation: 0,
       ),
     ),
-    home: CrmBrowser(onPageReady: onPageReady, initialUri: initialUri),
+    home: startInPortal
+        ? CrmBrowser(onPageReady: onPageReady, initialUri: initialUri)
+        : AppShell(onPageReady: onPageReady),
   );
 }

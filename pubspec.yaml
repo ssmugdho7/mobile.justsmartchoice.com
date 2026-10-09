@@ -1,7 +1,7 @@
 name: smart_choice_mobile
 description: Editable Android app for the Smart Choice mobile CRM.
 publish_to: none
-version: 0.2.0+2
+version: 0.3.0+3
 environment:
   sdk: ^3.13.5
 dependencies:

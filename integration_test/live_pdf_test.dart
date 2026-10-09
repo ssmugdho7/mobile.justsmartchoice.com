@@ -14,6 +14,7 @@ void main() {
       var attempted = false;
       await tester.pumpWidget(
         SmartChoiceApp(
+          startInPortal: true,
           initialUri: Uri.parse(proposalUrl),
           onPageReady: (controller) async {
             if (attempted) return;
