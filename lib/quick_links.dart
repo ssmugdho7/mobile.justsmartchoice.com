@@ -34,6 +34,10 @@ enum QuickLink {
     for (final link in values) {
       if (link.uri == uri) return link.label;
     }
+    if (uri?.host == 'crm.justsmartchoice.com' &&
+        uri?.path == '/appointly/appointments_public/book') {
+      return 'Book an Appointment';
+    }
     if (uri?.host == 'justsmartchoice.com' && uri?.path == '/contacts.php') {
       return 'Contact Us';
     }

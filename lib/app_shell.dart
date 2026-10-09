@@ -319,8 +319,9 @@ class _AppShellState extends State<AppShell> {
                     LandingPage(
                       onEmployee: () => _openQuickLink(QuickLink.staff),
                       onClient: () => _openQuickLink(QuickLink.customer),
-                      onAppointment: () =>
-                          _openQuickLink(QuickLink.appointment),
+                      onAppointment: () => _openPortal(
+                        NavigationPolicy.publicBooking.toString(),
+                      ),
                       onContact: () => _openPortal(
                         NavigationPolicy.websiteHome
                             .resolve('/contacts.php')

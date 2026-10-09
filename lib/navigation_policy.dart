@@ -3,6 +3,9 @@ enum NavigationDecision { internal, external, blocked }
 class NavigationPolicy {
   static final home = Uri.parse('https://crm.justsmartchoice.com/admin');
   static final websiteHome = Uri.parse('https://justsmartchoice.com/');
+  static final publicBooking = Uri.parse(
+    'https://crm.justsmartchoice.com/appointly/appointments_public/book',
+  );
   static final websiteAbout = websiteHome.resolve('/about.php');
   static const crmHost = 'crm.justsmartchoice.com';
   static const appSiteHost = 'mobile.justsmartchoice.com';

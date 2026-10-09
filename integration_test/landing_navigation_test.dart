@@ -101,6 +101,14 @@ void main() {
       await tester.tap(find.widgetWithText(ListTile, 'Home'));
       await tester.pumpAndSettle();
       expect(find.text('Employee Login'), findsOneWidget);
+      visits.clear();
+      await tester.tap(find.text('Book an Appointment'));
+      await tester.pump();
+      await waitFor(
+        (uri) =>
+            uri.host == 'crm.justsmartchoice.com' &&
+            uri.path == '/appointly/appointments_public/book',
+      );
       expect(tester.takeException(), isNull);
     },
   );

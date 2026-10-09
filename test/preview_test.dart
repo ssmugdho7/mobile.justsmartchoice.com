@@ -26,6 +26,8 @@ void main() {
   for (final destination in {
     'Make appointment':
         'https://crm.justsmartchoice.com/appointly/appointments',
+    'Book an Appointment':
+        'https://crm.justsmartchoice.com/appointly/appointments_public/book',
     'Toolbox': 'https://justsmartchoice.com/toolbox.php',
   }.entries) {
     testWidgets('${destination.key} preview identifies its destination', (
