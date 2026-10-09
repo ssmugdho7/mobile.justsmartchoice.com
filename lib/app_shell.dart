@@ -97,19 +97,20 @@ class _AppShellState extends State<AppShell> {
   }
 
   Widget _drawer() => Drawer(
+    backgroundColor: _dark ? const Color(0xff202020) : Colors.white,
     shape: const RoundedRectangleBorder(),
     child: SafeArea(
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 40),
+            padding: const EdgeInsets.only(top: 50, bottom: 26),
             child: Row(
               children: [
                 Image.asset(
                   'assets/brand/smart-choice-logo.png',
-                  width: 60,
-                  height: 60,
+                  width: 55,
+                  height: 55,
                   fit: BoxFit.contain,
                 ),
                 const SizedBox(width: 12),
@@ -137,9 +138,10 @@ class _AppShellState extends State<AppShell> {
   );
   Widget _navItem(IconData icon, String title, VoidCallback action) => Builder(
     builder: (context) => ListTile(
+      minTileHeight: 40,
       contentPadding: EdgeInsets.zero,
       leading: Icon(icon),
-      title: Text(title, style: const TextStyle(fontSize: 18)),
+      title: Text(title, style: const TextStyle(fontSize: 16)),
       trailing: const Icon(Icons.chevron_right, color: Colors.grey),
       onTap: () {
         Navigator.of(context).pop();
@@ -160,11 +162,16 @@ class _AppShellState extends State<AppShell> {
         appBar: _page == 2
             ? null
             : AppBar(
+                leadingWidth: 48,
+                titleSpacing: 0,
                 backgroundColor: Colors.black,
                 foregroundColor: Colors.white,
                 title: Text(
                   _page == 0 ? 'Smart Choice USA' : 'About',
-                  style: const TextStyle(fontWeight: FontWeight.w600),
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 leading: _page == 1
                     ? IconButton(
