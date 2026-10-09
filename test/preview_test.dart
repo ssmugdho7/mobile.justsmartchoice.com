@@ -15,11 +15,29 @@ void main() {
         ),
       ),
     );
-    expect(find.text('Customer portal'), findsOneWidget);
+    expect(find.text('Customer portal'), findsNWidgets(2));
     expect(find.textContaining('need native-device testing'), findsOneWidget);
-    expect(find.text('Open live CRM in a new tab'), findsOneWidget);
+    expect(find.text('Open customer portal in a new tab'), findsOneWidget);
     await tester.tap(find.text('Back to Home'));
     expect(returned, isTrue);
     expect(tester.takeException(), isNull);
   });
+
+  for (final destination in {
+    'Make appointment':
+        'https://crm.justsmartchoice.com/appointly/appointments',
+    'Toolbox': 'https://justsmartchoice.com/toolbox.php',
+  }.entries) {
+    testWidgets('${destination.key} preview identifies its destination', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: PortalSurface(initialUri: Uri.parse(destination.value)),
+        ),
+      );
+      expect(find.text(destination.key), findsNWidgets(2));
+      expect(find.text('Staff portal'), findsNothing);
+    });
+  }
 }

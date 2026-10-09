@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'portal_surface_native.dart'
     if (dart.library.js_interop) 'portal_surface_web.dart';
 import 'public_site_native.dart'
     if (dart.library.js_interop) 'public_site_web.dart';
 import 'navigation_policy.dart';
+import 'quick_links.dart';
 
 class AppShell extends StatefulWidget {
   const AppShell({super.key, this.onPageReady, this.publicPageBuilder});
@@ -96,6 +98,23 @@ class _AppShellState extends State<AppShell> {
     }
   }
 
+  Future<void> _openQuickLink(QuickLink link) async {
+    if (link == QuickLink.callOffice) {
+      try {
+        if (await launchUrl(link.uri, mode: LaunchMode.externalApplication)) {
+          return;
+        }
+      } catch (_) {}
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Call our office at (727) 755-3786.')),
+        );
+      }
+      return;
+    }
+    await _openPortal(link.destination);
+  }
+
   Widget _drawer() => Drawer(
     backgroundColor: _dark ? const Color(0xff202020) : Colors.white,
     shape: const RoundedRectangleBorder(),
@@ -180,22 +199,7 @@ class _AppShellState extends State<AppShell> {
                         onPressed: () => _select(0),
                       )
                     : null,
-                actions: [
-                  PopupMenuButton<String>(
-                    tooltip: 'Choose CRM portal',
-                    onSelected: _openPortal,
-                    itemBuilder: (_) => const [
-                      PopupMenuItem(
-                        value: '/admin',
-                        child: Text('Staff portal'),
-                      ),
-                      PopupMenuItem(
-                        value: '/clients',
-                        child: Text('Customer portal'),
-                      ),
-                    ],
-                  ),
-                ],
+                actions: [QuickLinksMenu(onSelected: _openQuickLink)],
               ),
         drawer: _page == 0 ? _drawer() : null,
         body: IndexedStack(

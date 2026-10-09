@@ -35,10 +35,13 @@ void main() {
       find.text('Public page: https://justsmartchoice.com/'),
       findsOneWidget,
     );
-    await tester.tap(find.byTooltip('Choose CRM portal'));
+    await tester.tap(find.byTooltip('Quick links'));
     await tester.pumpAndSettle();
     expect(find.text('Staff portal'), findsOneWidget);
     expect(find.text('Customer portal'), findsOneWidget);
+    expect(find.text('Call office'), findsOneWidget);
+    expect(find.text('Make appointment'), findsOneWidget);
+    expect(find.text('Toolbox'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
   testWidgets(

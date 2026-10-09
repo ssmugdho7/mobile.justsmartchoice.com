@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'quick_links.dart';
+
 /// Browser design preview never embeds authenticated CRM data or native plugins.
 class PortalSurface extends StatelessWidget {
   const PortalSurface({
@@ -22,7 +24,14 @@ class PortalSurface extends StatelessWidget {
   final Future<void> Function(InAppWebViewController)? onPageReady;
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Portal preview')),
+    appBar: AppBar(
+      title: Text(QuickLink.labelFor(initialUri)),
+      leading: IconButton(
+        tooltip: 'Back to Home',
+        icon: const Icon(Icons.arrow_back),
+        onPressed: onHome,
+      ),
+    ),
     drawer: navigationDrawer,
     body: ListView(
       padding: const EdgeInsets.all(24),
@@ -30,7 +39,7 @@ class PortalSurface extends StatelessWidget {
         const Icon(Icons.open_in_new, size: 48, color: Color(0xff107566)),
         const SizedBox(height: 24),
         Text(
-          initialUri?.path == '/clients' ? 'Customer portal' : 'Staff portal',
+          QuickLink.labelFor(initialUri),
           style: Theme.of(context).textTheme.headlineSmall,
         ),
         const SizedBox(height: 16),
@@ -42,7 +51,9 @@ class PortalSurface extends StatelessWidget {
         FilledButton.icon(
           onPressed: () => launchUrl(initialUri!, webOnlyWindowName: '_blank'),
           icon: const Icon(Icons.open_in_new),
-          label: const Text('Open live CRM in a new tab'),
+          label: Text(
+            'Open ${QuickLink.labelFor(initialUri).toLowerCase()} in a new tab',
+          ),
         ),
         const SizedBox(height: 12),
         OutlinedButton.icon(

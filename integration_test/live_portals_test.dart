@@ -75,7 +75,7 @@ void main() {
     };
     image.dispose();
     observations.clear();
-    await tester.tap(find.byTooltip('Choose CRM portal'));
+    await tester.tap(find.byTooltip('Quick links'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Customer portal'));
     await tester.pump();

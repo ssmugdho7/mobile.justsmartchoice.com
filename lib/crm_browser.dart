@@ -10,6 +10,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'document_download.dart';
 import 'navigation_policy.dart';
+import 'quick_links.dart';
 import 'site_unavailable.dart';
 
 class CrmBrowser extends StatefulWidget {
@@ -145,10 +146,23 @@ class _CrmBrowserState extends State<CrmBrowser> {
     await _web?.loadUrl(urlRequest: URLRequest(url: WebUri(url.toString())));
   }
 
+  Future<void> _openQuickLink(QuickLink link) async {
+    if (link == QuickLink.callOffice) {
+      try {
+        if (await launchUrl(link.uri, mode: LaunchMode.externalApplication)) {
+          return;
+        }
+      } catch (_) {}
+      _message('Call our office at (727) 755-3786.');
+      return;
+    }
+    await _portal(link.destination);
+  }
+
   void _info() => showAboutDialog(
     context: context,
     applicationName: 'Smart Choice Mobile',
-    applicationVersion: '0.3.0',
+    applicationVersion: '0.4.0',
     children: const [
       Text(
         'CRM: crm.justsmartchoice.com\nApp downloads: mobile.justsmartchoice.com\nUses your existing CRM account and records.',
@@ -339,26 +353,9 @@ class _CrmBrowserState extends State<CrmBrowser> {
                   icon: const Icon(Icons.refresh),
                   onPressed: _retry,
                 ),
-                PopupMenuButton<String>(
-                  tooltip: 'Choose CRM portal',
-                  onSelected: (value) {
-                    if (value == 'about') {
-                      (widget.onAbout ?? _info)();
-                    } else {
-                      _portal(value);
-                    }
-                  },
-                  itemBuilder: (_) => const [
-                    PopupMenuItem(value: '/admin', child: Text('Staff portal')),
-                    PopupMenuItem(
-                      value: '/clients',
-                      child: Text('Customer portal'),
-                    ),
-                    PopupMenuItem(
-                      value: 'about',
-                      child: Text('App information'),
-                    ),
-                  ],
+                QuickLinksMenu(
+                  onSelected: _openQuickLink,
+                  onAbout: widget.onAbout ?? _info,
                 ),
               ],
             ),
