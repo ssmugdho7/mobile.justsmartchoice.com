@@ -94,7 +94,8 @@ async function main() {
     guard.textContent = "window.gtag=function(){};window.dataLayer=[];document.addEventListener('submit',function(e){e.preventDefault();},true);";
     document.head.append(guard);
     const shellStyle = document.createElement('style');
-    shellStyle.textContent = '.page-header,.page > .section-banner:first-child{display:none!important}@media(max-width:400px){.swiper-slide .swiper-slide-caption .cta-box-heading{font-size:clamp(26px,8vw,32px)!important}}';
+    // Embedded/background previews can miss a transitionEnd event; keep the active caption readable.
+    shellStyle.textContent = '.page-header,.page > .section-banner:first-child{display:none!important}.swiper-slide-active [data-caption-animate].not-animated{opacity:1;visibility:visible}@media(max-width:400px){.swiper-slide .swiper-slide-caption .cta-box-heading{font-size:clamp(26px,8vw,32px)!important}}';
     document.head.append(shellStyle);
     document.querySelectorAll('[aria-label="Open Smart Choice Assistant"]').forEach(node => node.remove());
     await fs.writeFile(path.join(directory, `${name}.html`), dom.serialize().replace(/[ \t]+\r?$/gm, ''));
