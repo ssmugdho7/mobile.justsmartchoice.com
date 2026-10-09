@@ -26,7 +26,7 @@ class PreviewApp extends StatelessWidget {
             const Padding(
               padding: EdgeInsets.all(12),
               child: Text(
-                'Design preview · Launch, Home menu, Shop & About\nBuild ${String.fromEnvironment('PREVIEW_COMMIT', defaultValue: 'local')} · ${String.fromEnvironment('PREVIEW_DATE', defaultValue: 'development')}',
+                'Mobile preview · Connected to live CRM\nBuild ${String.fromEnvironment('PREVIEW_COMMIT', defaultValue: 'local')} · ${String.fromEnvironment('PREVIEW_DATE', defaultValue: 'development')}',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 12, height: 1.6),
               ),

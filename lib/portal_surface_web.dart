@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
-import 'package:url_launcher/url_launcher.dart';
 
+import 'preview_page.dart';
+import 'preview_navigation.dart';
+import 'navigation_policy.dart';
 import 'quick_links.dart';
 
-/// Browser design preview never embeds authenticated CRM data or native plugins.
-class PortalSurface extends StatelessWidget {
+/// Render the actual CRM inside the mobile frame. Marketing pages use public
+/// snapshots; authenticated responses and credentials are never copied.
+class PortalSurface extends StatefulWidget {
   const PortalSurface({
     super.key,
     this.initialUri,
@@ -23,45 +26,49 @@ class PortalSurface extends StatelessWidget {
   final void Function(InAppWebViewController)? onBrowserCreated;
   final Future<void> Function(InAppWebViewController)? onPageReady;
   @override
+  State<PortalSurface> createState() => _PortalSurfaceState();
+}
+
+class _PortalSurfaceState extends State<PortalSurface> {
+  late Uri _uri = widget.initialUri ?? NavigationPolicy.home;
+  int _reload = 0;
+  @override
+  void didUpdateWidget(PortalSurface oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialUri != oldWidget.initialUri) {
+      _uri = widget.initialUri ?? NavigationPolicy.home;
+    }
+  }
+
+  void _navigate(Uri uri) =>
+      followPreviewLink(uri, (next) => setState(() => _uri = next));
+  @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(
-      title: Text(QuickLink.labelFor(initialUri)),
+      title: Text(QuickLink.labelFor(_uri)),
       leading: IconButton(
         tooltip: 'Back to Home',
         icon: const Icon(Icons.arrow_back),
-        onPressed: onHome,
+        onPressed: widget.onHome,
       ),
-    ),
-    drawer: navigationDrawer,
-    body: ListView(
-      padding: const EdgeInsets.all(24),
-      children: [
-        const Icon(Icons.open_in_new, size: 48, color: Color(0xff107566)),
-        const SizedBox(height: 24),
-        Text(
-          QuickLink.labelFor(initialUri),
-          style: Theme.of(context).textTheme.headlineSmall,
+      actions: [
+        IconButton(
+          tooltip: 'Reload page',
+          icon: const Icon(Icons.refresh),
+          onPressed: () => setState(() => _reload++),
         ),
-        const SizedBox(height: 16),
-        const Text(
-          'This browser preview shows the app interface. The native app opens your CRM inside its secure browser. Login, document saving, camera uploads and video calls need native-device testing.',
-          style: TextStyle(height: 1.7),
-        ),
-        const SizedBox(height: 24),
-        FilledButton.icon(
-          onPressed: () => launchUrl(initialUri!, webOnlyWindowName: '_blank'),
-          icon: const Icon(Icons.open_in_new),
-          label: Text(
-            'Open ${QuickLink.labelFor(initialUri).toLowerCase()} in a new tab',
-          ),
-        ),
-        const SizedBox(height: 12),
-        OutlinedButton.icon(
-          onPressed: onHome,
-          icon: const Icon(Icons.home_outlined),
-          label: const Text('Back to Home'),
+        QuickLinksMenu(
+          onSelected: (link) => _navigate(link.uri),
+          onAbout: widget.onAbout,
         ),
       ],
+    ),
+    drawer: widget.navigationDrawer,
+    body: PreviewPage(
+      key: ValueKey(_reload),
+      uri: _uri,
+      title: QuickLink.labelFor(_uri),
+      onNavigate: _navigate,
     ),
   );
 }

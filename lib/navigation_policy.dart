@@ -23,17 +23,16 @@ class NavigationPolicy {
       isHttps(uri) && (uri.host == crmHost || uri.host == meetingHost);
 
   static NavigationDecision decide(Uri uri) {
-    if (isAppPage(uri) || (isHttps(uri) && uri.host == meetingHost)) {
-      return NavigationDecision.internal;
-    }
     // Never switch the live-account app to a different CRM environment.
     if (isOtherCrm(uri)) {
       return NavigationDecision.blocked;
     }
-    if (isHttps(uri) ||
-        ((uri.scheme == 'mailto' || uri.scheme == 'tel') &&
-            uri.path.isNotEmpty &&
-            uri.userInfo.isEmpty)) {
+    // Web links stay inside the app; cookie, download and media trust remain
+    // restricted to their existing approved origins.
+    if (isHttps(uri)) return NavigationDecision.internal;
+    if ((uri.scheme == 'mailto' || uri.scheme == 'tel') &&
+        uri.path.isNotEmpty &&
+        uri.userInfo.isEmpty) {
       return NavigationDecision.external;
     }
     return NavigationDecision.blocked;

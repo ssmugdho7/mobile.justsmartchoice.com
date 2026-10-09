@@ -1,10 +1,9 @@
-import 'dart:ui_web' as ui_web;
-
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
-import 'package:web/web.dart' as web;
 
-/// Only public marketing content is copied. CRM sessions never enter this frame.
+import 'preview_page.dart';
+import 'preview_navigation.dart';
+
 class PublicSiteView extends StatefulWidget {
   const PublicSiteView({
     super.key,
@@ -20,29 +19,12 @@ class PublicSiteView extends StatefulWidget {
 }
 
 class _PublicSiteViewState extends State<PublicSiteView> {
-  static int _nextId = 0;
-  late final String _viewType;
+  late Uri _uri = widget.uri;
   @override
-  void initState() {
-    super.initState();
-    _viewType = 'smart-choice-public-${_nextId++}';
-    ui_web.platformViewRegistry.registerViewFactory(_viewType, (_) {
-      final page = widget.uri.path == '/about.php' ? 'about' : 'home';
-      return web.HTMLIFrameElement()
-        ..src =
-            'public-pages/$page.html?v=${const String.fromEnvironment('PREVIEW_COMMIT', defaultValue: 'local')}'
-        ..title =
-            'Smart Choice ${page == 'home' ? 'Home' : 'About'} public page preview'
-        ..setAttribute(
-          'sandbox',
-          'allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox',
-        )
-        ..style.border = '0'
-        ..style.width = '100%'
-        ..style.height = '100%';
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) => HtmlElementView(viewType: _viewType);
+  Widget build(BuildContext context) => PreviewPage(
+    uri: _uri,
+    title: 'Smart Choice public page',
+    onNavigate: (uri) =>
+        followPreviewLink(uri, (next) => setState(() => _uri = next)),
+  );
 }

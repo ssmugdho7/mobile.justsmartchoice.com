@@ -32,8 +32,8 @@ an Android 10+ ARM64 **debug-signed testing build**, not a Play Store release.
 - A short centered logo intro leads to the six-button Home menu: Employee Login, Client Login, Book an Appointment, Contact Us, Toolbox and Shop. Settings opens Dark Mode and About. Shop opens the existing public homepage; it is not loaded before selection. Returning Home does not replay the intro. Website/CRM navigation preserves the CRM WebView session. Reduced-motion users skip the intro and transition.
 - CRM-colored toolbar: back/close, refresh, staff/customer portal switch and info.
 - Server login, cookies, CSRF, roles and ownership checks remain authoritative.
-- CRM and `meet.jit.si` stay inside the app. Other HTTPS, phone and email links
-  open externally. Navigation/requests to the development CRM are blocked.
+- CRM and `meet.jit.si` stay inside the app. Other HTTPS links also stay in the app; phone and email actions
+  use the device handlers. Navigation/requests to the development CRM are blocked.
 - Android file picker and user-initiated popup windows are supported.
 - Android first launch requests microphone, notification and camera permission in that order, matching the original APK. Denial never blocks Home; the prompt sequence is not repeated on later launches. Camera/microphone use remains limited to CRM/Jitsi requests. Notification permission does not itself configure push delivery.
 - HTTPS certificates remain verified; cleartext/mixed content and session backup
@@ -103,13 +103,13 @@ and cannot be upgraded by this APK.
 
 Run `./tool/run.sh -d <android-device-id>` once, then press `r` in that terminal after editing Dart code to hot reload. Press `R` for a full restart. Native Kotlin/Swift or plugin changes need a rebuild; ordinary Flutter screen changes do not need another APK download. `flutter devices` lists connected devices.
 
-The shared launch/Home menu/Shop/About interface has a browser entry point: `lib/preview_main.dart`. Build with `./tool/build-preview.sh --base-href /` and serve `build/web` locally for a complete browser preview. Successful `dev` pushes automatically build and publish it through `.github/workflows/preview.yml` to GitHub Pages. Client link: https://mobile.justsmartchoice.com/preview/ . Refresh that link after the workflow completes; the header identifies the source commit and build time.
+The shared launch/Home menu/Shop/About and embedded-portal interface has a browser entry point: `lib/preview_main.dart`. Build with `./tool/build-preview.sh --base-href /` and serve `build/web` locally for a complete browser preview. Successful `dev` pushes automatically build and publish it through `.github/workflows/preview.yml` to GitHub Pages. Client link: https://mobile.justsmartchoice.com/preview/ . Refresh that link after the workflow completes; the header identifies the source commit and build time.
 
 This preview uses the same Flutter AppShell and navigation as the native app. Native Shop loads `https://justsmartchoice.com/`; About loads `https://justsmartchoice.com/about.php`, fixing the original APK's malformed `http://about.php/`. The original black header, logo drawer and Dark Mode switch are restored. CRM shortcuts remain under the header's portal menu. Dark Mode controls the app chrome; website content retains its own design.
 
-The public website blocks cross-domain framing and asset loading. The browser preview therefore uses copies of the two public pages and their public assets under `preview_site/`. Refresh those with `node tool/refresh-public-pages.cjs` after a website design change. Preview forms cannot submit, links open the live website separately, and analytics/chat integrations are excluded. These preview files are not bundled into Android APKs. No CRM sessions or private content are copied. Native downloads, uploads, permissions and video calls still require emulator/device testing.
+The public website blocks cross-domain framing and asset loading. The browser preview therefore uses copies of Home, About, Contact, Toolbox, Fractions and Pricing and their public assets under `preview_site/`. Refresh those with `node tool/refresh-public-pages.cjs` after a website design change. Copied public-page forms cannot submit, links navigate inside the mobile preview, and analytics/chat integrations are excluded. CRM pages are displayed directly inside a sandboxed frame, retain their server authentication/CSRF checks and act on live CRM data. These preview files are not bundled into Android APKs. No CRM sessions, credentials or private content are copied or proxied. Native downloads, uploads, permissions and video calls still require emulator/device testing.
 
-The installed app loads the live public website, including its Resources/Legal footer, customer chat widget and Smart Choice Assistant (Support, Estimate and Book Appointment). Those remain website features and are not duplicated or replaced by native mock chat. The browser design preview does not send real chat messages.
+The installed app loads the live public website, including its Resources/Legal footer, customer chat widget and Smart Choice Assistant (Support, Estimate and Book Appointment). Those remain website features and are not duplicated or replaced by native mock chat. Copied marketing-page previews do not send chat messages or submit forms. Embedded CRM pages use the real CRM and existing account permissions.
 
 CRM password visibility and Remember me use the same server implementation on web and mobile: an 8-hour workday session and the user's selected 7-day remembered login. Native WebViews retain cookies in the platform store and share them between app views; passwords are never saved in Flutter preferences. Logout is handled by the CRM and revokes its device token. After upgrading old remembered cookies, users must sign in once to establish the new bounded token.
 
@@ -120,3 +120,11 @@ The download site's source is now `website/`; `web/` is Flutter's browser build 
 ## Apple release preparation
 
 An iOS project is included with the app bundle identifier and camera/microphone/photo purpose strings. It is a scaffold, not a verified iOS release: this Mac currently has Command Line Tools but not full Xcode. Before TestFlight, install Xcode, configure the private Apple signing team, implement and test the iOS document-saving channel, test WebView login/uploads/video meetings on a real iPhone, and perform App Store review preparation. Never publish debug signing keys or Apple credentials. Android's native document channel is not an iOS implementation.
+
+## In-app navigation and browser preview origin
+
+HTTPS page links and user-initiated popups stay in the Android app. Cookies remain domain-scoped; media permission remains limited to CRM/Jitsi and the document bridge remains CRM-only. Unsafe URLs and the development CRM stay blocked.
+
+`website/preview.html` now loads the public GitHub Pages app assets directly into the document on `mobile.justsmartchoice.com`, rather than placing the entire app in a GitHub iframe. This keeps the actual CRM frame on the same site for its existing cookie protection, without changing CRM response headers or authentication. Use https://mobile.justsmartchoice.com/preview/ for connected testing. The standalone GitHub Pages link is cross-site to CRM and browser cookie restrictions can affect authentication there.
+
+No preview button asks users to open a new tab. Six calculator links currently return 404 on the original website; the preview displays an unavailable message with a return to Toolbox instead of a broken frame. Contact and Toolbox are public snapshots in the browser preview; their real pages and form handlers run inside the installed app. Native downloads, uploads and video calls must still be verified on a device. Browser frame sandboxing intentionally does not allow popups or top-level navigation.

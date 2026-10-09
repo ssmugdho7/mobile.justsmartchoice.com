@@ -55,28 +55,37 @@ void main() {
     );
     expect(NavigationPolicy.isOtherCrm(NavigationPolicy.home), isFalse);
   });
-  test('External links do not inherit CRM cookies or media permissions', () {
-    for (final value in [
-      'https://example.com',
-      'https://mobile.justsmartchoice.com/',
-      'https://mobile.justsmartchoice.com.evil.test',
-      'https://meet.jit.si.evil.test',
-      'mailto:support@example.com',
-      'tel:+18135550100',
-    ]) {
-      final uri = Uri.parse(value);
-      expect(NavigationPolicy.decide(uri), NavigationDecision.external);
-      expect(NavigationPolicy.canUseMedia(uri), isFalse);
-      expect(NavigationPolicy.isCrm(uri), isFalse);
+  test(
+    'HTTPS links stay inside without inheriting CRM trust or media permissions',
+    () {
+      for (final value in [
+        'https://example.com',
+        'https://mobile.justsmartchoice.com/',
+        'https://mobile.justsmartchoice.com.evil.test',
+        'https://meet.jit.si.evil.test',
+      ]) {
+        final uri = Uri.parse(value);
+        expect(NavigationPolicy.decide(uri), NavigationDecision.internal);
+        expect(NavigationPolicy.canUseMedia(uri), isFalse);
+        expect(NavigationPolicy.isCrm(uri), isFalse);
+      }
+      expect(
+        NavigationPolicy.canUseMedia(Uri.parse('https://meet.jit.si/room')),
+        isTrue,
+      );
+      expect(
+        NavigationPolicy.isCrm(Uri.parse('https://meet.jit.si/room')),
+        isFalse,
+      );
+    },
+  );
+  test('phone and email actions still use the device handlers', () {
+    for (final url in ['tel:+18135550100', 'mailto:support@example.com']) {
+      expect(
+        NavigationPolicy.decide(Uri.parse(url)),
+        NavigationDecision.external,
+      );
     }
-    expect(
-      NavigationPolicy.canUseMedia(Uri.parse('https://meet.jit.si/room')),
-      isTrue,
-    );
-    expect(
-      NavigationPolicy.isCrm(Uri.parse('https://meet.jit.si/room')),
-      isFalse,
-    );
   });
   test(
     'Download names cannot contain path traversal or control characters',

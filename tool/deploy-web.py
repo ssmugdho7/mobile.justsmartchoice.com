@@ -54,6 +54,7 @@ mkdir -p {backup} {stage}
 chmod 700 {backup} {stage}
 ''')
 files = {'index.html': ROOT/'website/index.html', 'index.php': ROOT/'website/index.php',
+         'preview/index.html': ROOT/'website/preview.html',
          'downloads/.htaccess': ROOT/'website/downloads.htaccess',
          'downloads/smart-choice-mobile.apk': APK,
          f'downloads/smart-choice-mobile-{VERSION}.apk': APK}
@@ -63,7 +64,7 @@ with tempfile.TemporaryDirectory() as td:
         'build':'debug-testing', 'commit':commit, 'sha256':sha(APK),
         'download':f'https://mobile.justsmartchoice.com/downloads/smart-choice-mobile-{VERSION}.apk'}, indent=2)+'\n')
     files['release.json'] = release
-    remote(f'mkdir -p {stage}/downloads\n')
+    remote(f'mkdir -p {stage}/downloads {stage}/preview\n')
     uploaded = {}
     for rel, path in files.items():
         if path in uploaded:
@@ -76,7 +77,7 @@ with tempfile.TemporaryDirectory() as td:
     rollback = ['#!/bin/bash', 'set -eu']
     backups = []
     replacements = []
-    script = ['set -eu', f'cd {DOCROOT}', 'test ! -L downloads', 'mkdir -p downloads']
+    script = ['set -eu', f'cd {DOCROOT}', 'test ! -L downloads', 'test ! -L preview', 'mkdir -p downloads preview']
     for rel, path in files.items():
         qrel = shlex.quote(rel)
         old = f'{backup}/{rel}'

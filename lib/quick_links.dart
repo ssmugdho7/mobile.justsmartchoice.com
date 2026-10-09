@@ -41,6 +41,17 @@ enum QuickLink {
     if (uri?.host == 'justsmartchoice.com' && uri?.path == '/contacts.php') {
       return 'Contact Us';
     }
+    if (uri?.host == 'crm.justsmartchoice.com' &&
+        uri?.path == '/authentication/login') {
+      return 'Client Login';
+    }
+    if (uri?.host == 'justsmartchoice.com') {
+      return switch (uri?.path) {
+        '/fractionscalc.php' => 'Feet & Inches Calculator',
+        '/pricing.php' => 'Pricing',
+        _ => 'Smart Choice',
+      };
+    }
     return 'CRM';
   }
 }

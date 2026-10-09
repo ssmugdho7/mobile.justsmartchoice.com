@@ -1,0 +1,187 @@
+<!DOCTYPE html><html lang="en"><head><base href="./">
+  <meta charset="UTF-8">
+  <title>Feet and Inches Calculator | Smart Choice</title>
+  <meta name="description" content="Add, subtract, multiply, or divide feet and inches fractions. Handles mixed numbers, fractions, and whole numbers.">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+    nav {
+      background: #333;
+      padding: 10px;
+    }
+    nav a {
+      color: #fff;
+      margin: 0 15px;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    h1 {
+      margin-top: 20px;
+      color: #333;
+    }
+    .calculator {
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+      display: inline-block;
+      margin: 20px auto;
+      padding: 20px;
+      max-width: 500px;
+      text-align: left;
+    }
+    label { font-weight: bold; }
+    input, select {
+      padding: 6px;
+      margin: 6px 0;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    button {
+      background: #ff6600;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      margin: 10px 5px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    button:hover { background: #e65c00; }
+    .result {
+      background: #f2f2f2;
+      padding: 15px;
+      margin-top: 15px;
+      border-radius: 5px;
+      font-size: 18px;
+    }
+    footer {
+      background: #333;
+      color: #fff;
+      padding: 15px;
+      margin-top: 30px;
+    }
+  </style>
+<script>window.gtag=function(){};window.dataLayer=[];document.addEventListener('submit',function(e){e.preventDefault();},true);</script><script src="navigation.js"></script><style>.page-header,.page > .section-banner:first-child{display:none!important}.swiper-slide-active [data-caption-animate].not-animated{opacity:1;visibility:visible}@media(max-width:400px){.swiper-slide .swiper-slide-caption .cta-box-heading{font-size:clamp(26px,8vw,32px)!important}}</style></head>
+<body>
+  <nav>
+    <a href="https://justsmartchoice.com/calculator.php" target="_blank" rel="noopener noreferrer">Standard Calculator</a>
+    <a href="https://justsmartchoice.com/concrete-calculator.php" target="_blank" rel="noopener noreferrer">Concrete Volume Calculator</a>
+    <a href="https://justsmartchoice.com/feet-inches-calculator.php" target="_blank" rel="noopener noreferrer">Feet &amp; Inches Calculator</a>
+  </nav>
+
+  <h1>Feet and Inches Calculator</h1>
+  <p>Enter feet (whole numbers) and inches (fractions or mixed numbers).</p>
+
+  <div class="calculator">
+    <form id="fiCalc">
+      <label>First Value:</label><br>
+      Feet: <input type="number" id="feet1" placeholder="Feet"><br>
+      Inches: <input type="text" id="inches1" placeholder="e.g. 1 1/2, 3/4, 10"><br>
+
+      <label>Operation:</label>
+      <select id="operation">
+        <option value="add">+</option>
+        <option value="subtract">−</option>
+        <option value="multiply">×</option>
+        <option value="divide">÷</option>
+      </select><br>
+
+      <label>Second Value:</label><br>
+      Feet: <input type="number" id="feet2" placeholder="Feet"><br>
+      Inches: <input type="text" id="inches2" placeholder="e.g. 2 3/8, 1/2, 7"><br>
+
+      <button type="button" onclick="calculate()">Calculate</button>
+      <button type="reset">Clear</button>
+    </form>
+
+    <div class="result" id="result">Result will appear here.</div>
+  </div>
+
+  <footer>
+    Powered by Smart Choice
+  </footer>
+
+<script>
+function parseInches(input) {
+  if (!input.trim()) return 0;
+  let parts = input.trim().split(" ");
+  let total = 0;
+
+  if (parts.length === 2) {
+    total += parseInt(parts[0], 10);
+    total += evalFraction(parts[1]);
+  } else if (parts.length === 1) {
+    if (parts[0].includes("/")) {
+      total += evalFraction(parts[0]);
+    } else {
+      total += parseFloat(parts[0]);
+    }
+  }
+  return total;
+}
+
+function evalFraction(frac) {
+  let [num, den] = frac.split("/");
+  return parseFloat(num) / parseFloat(den);
+}
+
+function gcd(a, b) {
+  return b ? gcd(b, a % b) : a;
+}
+
+function simplifyFraction(num, den) {
+  let g = gcd(num, den);
+  return [num/g, den/g];
+}
+
+function toFeetInches(totalInches) {
+  let feet = Math.floor(totalInches / 12);
+  let inches = totalInches - feet * 12;
+  let wholeInches = Math.floor(inches);
+  let frac = inches - wholeInches;
+  let fractionStr = "";
+
+  if (frac > 0.001) {
+    let den = 64;
+    let num = Math.round(frac * den);
+    [num, den] = simplifyFraction(num, den);
+    if (num === den) {
+      wholeInches += 1;
+    } else {
+      fractionStr = " " + num + "/" + den;
+    }
+  }
+  return feet + " ft " + wholeInches + fractionStr + " in";
+}
+
+function calculate() {
+  let f1 = parseFloat(document.getElementById("feet1").value) || 0;
+  let i1 = parseInches(document.getElementById("inches1").value) || 0;
+  let f2 = parseFloat(document.getElementById("feet2").value) || 0;
+  let i2 = parseInches(document.getElementById("inches2").value) || 0;
+
+  let total1 = f1 * 12 + i1;
+  let total2 = f2 * 12 + i2;
+
+  let op = document.getElementById("operation").value;
+  let resultInches = 0;
+
+  switch (op) {
+    case "add": resultInches = total1 + total2; break;
+    case "subtract": resultInches = total1 - total2; break;
+    case "multiply": resultInches = total1 * total2; break;
+    case "divide": resultInches = total1 / total2; break;
+  }
+
+  document.getElementById("result").innerText = "Result: " + toFeetInches(resultInches);
+}
+</script>
+
+
+</body></html>

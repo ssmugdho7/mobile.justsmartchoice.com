@@ -1,4 +1,4 @@
-// Refresh only the two public marketing pages, never authenticated CRM content.
+// Refresh selected public marketing pages, never authenticated CRM content.
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const crypto = require('node:crypto');
@@ -25,7 +25,11 @@ async function main() {
     const name = crypto.createHash('sha256').update(url.href).digest('hex').slice(0, 20) + extension;
     if (!cache.has(url.href)) {
       cache.set(url.href, (async () => {
-        const response = await fetch(url, { signal: AbortSignal.timeout(30000) });
+        const response = await fetch(url, { headers: {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36', 'Accept': 'text/html'}, signal: AbortSignal.timeout(30000) });
+        if (response.status === 404 && /\.(jpg|jpeg|png|webp|gif|svg)$/i.test(url.pathname)) {
+          console.warn(`Missing public image omitted: ${url.pathname}`);
+          return null;
+        }
         if (!response.ok) throw new Error(`Public asset unavailable: ${url.pathname}`);
         let bytes = Buffer.from(await response.arrayBuffer());
         if (bytes.length > 20 * 1024 * 1024) throw new Error('Public asset exceeds preview size limit');
@@ -36,10 +40,12 @@ async function main() {
     }
     return cache.get(url.href);
   }
-  for (const [name, route] of [['home', '/'], ['about', '/about.php']]) {
+  const pages = [['home', '/'], ['about', '/about.php'], ['contact', '/contacts.php'], ['toolbox', '/toolbox.php'], ['fractions', '/fractionscalc.php'], ['pricing', '/pricing.php']];
+  const selected = process.argv.slice(2);
+  for (const [name, route] of pages.filter(([name]) => !selected.length || selected.includes(name))) {
     const url = new URL(route, 'https://justsmartchoice.com');
-    const response = await fetch(url, { signal: AbortSignal.timeout(30000) });
-    if (!response.ok || new URL(response.url).hostname !== url.hostname) throw new Error('Public page unavailable');
+    const response = await fetch(url, { headers: {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36', 'Accept': 'text/html'}, signal: AbortSignal.timeout(30000) });
+    if (!response.ok || new URL(response.url).hostname !== url.hostname) throw new Error(`Public page unavailable: ${url.pathname} (${response.status})`);
     const dom = new JSDOM(await response.text());
     const document = dom.window.document;
     document.querySelectorAll('base, meta[http-equiv], iframe').forEach(node => node.remove());
@@ -58,6 +64,7 @@ async function main() {
         const attribute = element.hasAttribute('src') ? 'src' : 'href';
         const file = await asset(element.getAttribute(attribute), url);
         if (file) element.setAttribute(attribute, `resources/${file}`);
+        else if (element.tagName === 'IMG' && ['justsmartchoice.com', 'www.justsmartchoice.com'].includes(new URL(element.getAttribute(attribute), url).hostname)) element.remove();
         else element.setAttribute(attribute, new URL(element.getAttribute(attribute), url).href);
       }));
     }
@@ -88,11 +95,17 @@ async function main() {
     // This is a design preview. Never submit production forms from a copied page.
     document.querySelectorAll('form').forEach(form => {
       form.removeAttribute('action');
-      form.querySelectorAll('input, select, textarea, button').forEach(control => control.disabled = true);
+      // Local construction calculators have no server-side submission.
+      if (!['fractions'].includes(name)) {
+        form.querySelectorAll('input, select, textarea, button').forEach(control => control.disabled = true);
+      }
     });
     const guard = document.createElement('script');
     guard.textContent = "window.gtag=function(){};window.dataLayer=[];document.addEventListener('submit',function(e){e.preventDefault();},true);";
     document.head.append(guard);
+    const navigation = document.createElement('script');
+    navigation.src = 'navigation.js';
+    document.head.append(navigation);
     const shellStyle = document.createElement('style');
     // Embedded/background previews can miss a transitionEnd event; keep the active caption readable.
     shellStyle.textContent = '.page-header,.page > .section-banner:first-child{display:none!important}.swiper-slide-active [data-caption-animate].not-animated{opacity:1;visibility:visible}@media(max-width:400px){.swiper-slide .swiper-slide-caption .cta-box-heading{font-size:clamp(26px,8vw,32px)!important}}';

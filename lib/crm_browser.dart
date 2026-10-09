@@ -162,7 +162,7 @@ class _CrmBrowserState extends State<CrmBrowser> {
   void _info() => showAboutDialog(
     context: context,
     applicationName: 'Smart Choice Mobile',
-    applicationVersion: '0.5.0',
+    applicationVersion: '0.5.1',
     children: const [
       Text(
         'CRM: crm.justsmartchoice.com\nApp downloads: mobile.justsmartchoice.com\nUses your existing CRM account and records.',
@@ -324,9 +324,17 @@ class _CrmBrowserState extends State<CrmBrowser> {
                     style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
                   ),
                   if (MediaQuery.textScalerOf(context).scale(1) <= 1.3)
-                    const Text(
-                      'Mobile CRM',
-                      style: TextStyle(fontSize: 11, color: Color(0xff64748b)),
+                    Text(
+                      NavigationPolicy.isAppPage(_current) ||
+                              _current.host == NavigationPolicy.meetingHost
+                          ? 'Mobile CRM'
+                          : _current.host,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: Color(0xff64748b),
+                      ),
                     ),
                 ],
               ),
@@ -379,9 +387,10 @@ class _CrmBrowserState extends State<CrmBrowser> {
                     ? URLRequest(
                         url: WebUri(
                           (widget.initialUri != null &&
-                                      NavigationPolicy.isAppPage(
-                                        widget.initialUri!,
-                                      )
+                                      NavigationPolicy.decide(
+                                            widget.initialUri!,
+                                          ) ==
+                                          NavigationDecision.internal
                                   ? widget.initialUri!
                                   : NavigationPolicy.home)
                               .toString(),
@@ -440,9 +449,10 @@ class _CrmBrowserState extends State<CrmBrowser> {
                         urlRequest: URLRequest(
                           url: WebUri(
                             (widget.initialUri != null &&
-                                        NavigationPolicy.isAppPage(
-                                          widget.initialUri!,
-                                        )
+                                        NavigationPolicy.decide(
+                                              widget.initialUri!,
+                                            ) ==
+                                            NavigationDecision.internal
                                     ? widget.initialUri!
                                     : NavigationPolicy.home)
                                 .toString(),
