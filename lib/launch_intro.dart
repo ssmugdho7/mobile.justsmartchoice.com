@@ -30,7 +30,11 @@ class _LaunchIntroState extends State<LaunchIntro>
 
   Future<void> _start(bool reducedMotion) async {
     try {
-      if (!reducedMotion) await _animation.forward().orCancel;
+      if (reducedMotion) {
+        _animation.value = 1;
+      } else {
+        await _animation.forward().orCancel;
+      }
     } on TickerCanceled {
       return;
     }

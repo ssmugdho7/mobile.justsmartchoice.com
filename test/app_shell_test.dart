@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:smart_choice_mobile/main.dart';
@@ -121,4 +123,30 @@ void main() {
     expect(find.text('Shop'), findsOneWidget);
     expect(find.byType(LaunchIntro), findsNothing);
   });
+  testWidgets(
+    'reduced-motion intro stays visible while first-install permissions finish',
+    (tester) async {
+      tester.platformDispatcher.accessibilityFeaturesTestValue =
+          const FakeAccessibilityFeatures(disableAnimations: true);
+      addTearDown(
+        tester.platformDispatcher.clearAccessibilityFeaturesTestValue,
+      );
+      final permissions = Completer<void>();
+      await tester.pumpWidget(
+        SmartChoiceApp(
+          publicPageBuilder: publicPage,
+          afterIntro: () => permissions.future,
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        find.bySemanticsLabel(RegExp('Opening Smart Choice')),
+        findsOneWidget,
+      );
+      expect(find.text('Shop'), findsNothing);
+      permissions.complete();
+      await tester.pumpAndSettle();
+      expect(find.text('Shop'), findsOneWidget);
+    },
+  );
 }
