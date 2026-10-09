@@ -1,5 +1,2 @@
-* text=auto
-*.bat text eol=crlf
-*.sh text eol=lf
-gradlew text eol=lf
-*.jar binary
+preview_site/resources/** -diff linguist-vendored=true
+preview_site/*.html linguist-generated=true

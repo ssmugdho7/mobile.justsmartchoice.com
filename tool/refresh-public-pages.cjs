@@ -97,7 +97,7 @@ async function main() {
     shellStyle.textContent = '.page-header,.page > .section-banner:first-child{display:none!important}';
     document.head.append(shellStyle);
     document.querySelectorAll('[aria-label="Open Smart Choice Assistant"]').forEach(node => node.remove());
-    await fs.writeFile(path.join(directory, `${name}.html`), dom.serialize());
+    await fs.writeFile(path.join(directory, `${name}.html`), dom.serialize().replace(/[ \t]+\r?$/gm, ''));
     console.log(`Refreshed public ${name} preview`);
   }
 }
