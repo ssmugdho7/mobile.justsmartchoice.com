@@ -29,7 +29,8 @@ class _PublicSiteViewState extends State<PublicSiteView> {
     ui_web.platformViewRegistry.registerViewFactory(_viewType, (_) {
       final page = widget.uri.path == '/about.php' ? 'about' : 'home';
       return web.HTMLIFrameElement()
-        ..src = 'public-pages/$page.html'
+        ..src =
+            'public-pages/$page.html?v=${const String.fromEnvironment('PREVIEW_COMMIT', defaultValue: 'local')}'
         ..title =
             'Smart Choice ${page == 'home' ? 'Home' : 'About'} public page preview'
         ..setAttribute(
