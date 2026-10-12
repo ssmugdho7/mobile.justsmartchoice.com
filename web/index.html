@@ -1,6 +1,14 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <script>
+    // CRM SameSite cookies cannot support booking inside a github.io iframe.
+    // Keep the same mobile UI in this tab on our own, same-site preview host.
+    if (location.hostname === 'ssmugdho7.github.io' &&
+        location.pathname.startsWith('/mobile.justsmartchoice.com/')) {
+      location.replace('https://mobile.justsmartchoice.com/preview/' + location.search + location.hash);
+    }
+  </script>
   <!--
     If you are serving your web app in a path other than the root, change the
     href value below to reflect the base path you are serving from.
