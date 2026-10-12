@@ -52,7 +52,12 @@ class _EmbeddedPageState extends State<EmbeddedPage> {
       return frame;
     });
     _listener = ((web.MessageEvent event) {
-      if (_frame == null || event.source != _frame!.contentWindow) return;
+      // JavaScript identity avoids Dart equality dispatch probing a cross-origin
+      // WindowProxy, which browsers correctly deny.
+      if (_frame == null ||
+          !event.source.strictEquals(_frame!.contentWindow).toDart) {
+        return;
+      }
       // Only copied public pages send navigation messages. The authenticated
       // CRM frame is never read, proxied or copied by this interface.
       final expected = Uri.parse(_source()).origin;
