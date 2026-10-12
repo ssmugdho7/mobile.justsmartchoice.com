@@ -9,6 +9,7 @@ import tempfile
 import datetime
 import zipfile
 import re
+from validate_apk import validate_testing_apk
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 HOST = 'scusawco@162.144.17.232'
@@ -33,9 +34,10 @@ def sha(path):
 
 if not APK.is_file():
     raise SystemExit('Build the normal testing APK first with tool/build-apk.sh')
-with zipfile.ZipFile(APK) as z:
-    if not {'AndroidManifest.xml', 'classes.dex'}.issubset(z.namelist()):
-        raise SystemExit('Invalid Android APK')
+try:
+    validate_testing_apk(APK)
+except (ValueError, zipfile.BadZipFile) as error:
+    raise SystemExit(str(error))
 if subprocess.check_output(['git', 'status', '--porcelain'], cwd=ROOT, text=True).strip():
     raise SystemExit('Commit/review source before deployment; worktree must be clean')
 commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip()

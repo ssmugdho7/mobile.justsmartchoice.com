@@ -58,3 +58,5 @@ CareerSafe and some other providers returned 403 to direct requests. Seminole Co
 - Android emulator integration: calculator resolution, arithmetic, corrected asset paths, Back to Toolbox, Concrete card, Progressive in-app navigation, and missing agreement recovery.
 
 Public page snapshots are refreshed with `node tool/refresh-public-pages.cjs <page-name>`. Public link status can be rechecked with `node tool/audit-toolbox.cjs <output.json>`.
+
+APK publication validates that the normal Dart program is present and integration-test entry points are absent. A packaging failure after local disk exhaustion was caught in the emulator, the download was rolled back, and the normal APK was rebuilt from clean artifacts.
