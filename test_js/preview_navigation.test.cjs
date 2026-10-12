@@ -18,3 +18,15 @@ test('copied public links send navigation to the mobile parent instead of openin
   assert.equal(messages[0].origin,'https://mobile.justsmartchoice.com');
   dom.window.close();
 });
+
+test('calculator Back button navigates to Toolbox through the mobile bridge', () => {
+  const dom = new JSDOM('<button data-mobile-href="https://justsmartchoice.com/toolbox.php">Go Back</button>', {url:'https://mobile.justsmartchoice.com/preview/public-pages/calculator.html',referrer:'https://mobile.justsmartchoice.com/preview/',runScripts:'outside-only'});
+  const messages=[];
+  dom.window.parent.postMessage=(message,origin)=>messages.push({message,origin});
+  dom.window.eval(fs.readFileSync('preview_site/navigation.js','utf8'));
+  dom.window.document.querySelector('button').click();
+  assert.equal(messages[0].message.type,'sc-mobile-navigate');
+  assert.equal(messages[0].message.url,'https://justsmartchoice.com/toolbox.php');
+  assert.equal(messages[0].origin,'https://mobile.justsmartchoice.com');
+  dom.window.close();
+});

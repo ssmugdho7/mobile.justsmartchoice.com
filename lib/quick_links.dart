@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import 'toolbox_resource.dart';
+import 'toolbox_navigation.dart';
+
 /// Public destinations already used by the Smart Choice website.
 enum QuickLink {
   staff(
@@ -31,6 +34,10 @@ enum QuickLink {
   Uri get uri => Uri.parse(destination);
 
   static String labelFor(Uri? uri) {
+    if (uri != null) {
+      final resource = ToolboxResource.find(uri);
+      if (resource != null) return resource.title;
+    }
     for (final link in values) {
       if (link.uri == uri) return link.label;
     }
@@ -46,9 +53,17 @@ enum QuickLink {
       return 'Client Login';
     }
     if (uri?.host == 'justsmartchoice.com') {
-      return switch (uri?.path) {
+      return switch (ToolboxNavigation.resolve(uri!).path) {
+        '/calculators/calculator.php' => 'Construction Calculator',
+        '/calculators/concretecalc.php' => 'Concrete Calculator',
+        '/calculators/feet-inches-calculator.php' => 'Feet & Inches Calculator',
+        '/calculators/flooring-calculator.php' => 'Flooring Calculator',
+        '/calculators/paint-calculator.php' => 'Paint Calculator',
+        '/calculators/vinyl-fence-calculator.php' => 'Vinyl Fence Calculator',
         '/fractionscalc.php' => 'Feet & Inches Calculator',
         '/pricing.php' => 'Pricing',
+        '/forms.php' => 'Forms Library',
+        '/contracts.php' => 'Contracts & Bids',
         _ => 'Smart Choice',
       };
     }

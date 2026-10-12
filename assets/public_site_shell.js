@@ -10,4 +10,24 @@
   }
   apply();
   document.addEventListener('DOMContentLoaded', apply, {once: true});
+  function fixCalculatorAssets() {
+    if (location.pathname === '/toolbox.php') {
+      document.querySelectorAll('a.smart-toolbox-box').forEach(function (link) { link.target = '_self'; });
+    }
+    if (!location.pathname.startsWith('/calculators/')) return;
+    document.querySelectorAll('.preloader').forEach(function (node) { node.remove(); });
+    document.querySelectorAll('button[onclick]').forEach(function (button) {
+      if (button.getAttribute('onclick') === 'history.back()') button.setAttribute('onclick', "location.assign('/toolbox.php')");
+    });
+    document.querySelectorAll('link[href],img[src]').forEach(function (element) {
+      const attribute = element.tagName === 'IMG' ? 'src' : 'href';
+      const value = element.getAttribute(attribute);
+      if (/^(css|images)\//.test(value || '')) element.setAttribute(attribute, '/' + value);
+    });
+    document.querySelectorAll('a[href]').forEach(function (link) {
+      const value = link.getAttribute('href') || '';
+      if (/^[^/]+\.php(?:[?#]|$)/.test(value) && !/calculator|calc\.php/.test(value)) link.setAttribute('href', '/' + value);
+    });
+  }
+  document.addEventListener('DOMContentLoaded', fixCalculatorAssets, {once: true});
 })();

@@ -25,7 +25,12 @@ async function main() {
     const name = crypto.createHash('sha256').update(url.href).digest('hex').slice(0, 20) + extension;
     if (!cache.has(url.href)) {
       cache.set(url.href, (async () => {
-        const response = await fetch(url, { headers: {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36', 'Accept': 'text/html'}, signal: AbortSignal.timeout(30000) });
+        let response = await fetch(url, { headers: {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36', 'Accept': 'text/html'}, signal: AbortSignal.timeout(30000) });
+        // Calculator templates use root website assets with relative paths.
+        if (response.status === 404 && url.pathname.startsWith('/calculators/')) {
+          const rootAsset = new URL(url.pathname.replace('/calculators/', '/'), url.origin);
+          response = await fetch(rootAsset, { headers: {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36'}, signal: AbortSignal.timeout(30000) });
+        }
         if (response.status === 404 && /\.(jpg|jpeg|png|webp|gif|svg)$/i.test(url.pathname)) {
           console.warn(`Missing public image omitted: ${url.pathname}`);
           return null;
@@ -40,7 +45,7 @@ async function main() {
     }
     return cache.get(url.href);
   }
-  const pages = [['home', '/'], ['about', '/about.php'], ['contact', '/contacts.php'], ['toolbox', '/toolbox.php'], ['fractions', '/fractionscalc.php'], ['pricing', '/pricing.php']];
+  const pages = [['home', '/'], ['about', '/about.php'], ['contact', '/contacts.php'], ['toolbox', '/toolbox.php'], ['fractions', '/fractionscalc.php'], ['pricing', '/pricing.php'], ['forms', '/forms.php'], ['contracts', '/contracts.php'], ...['calculator', 'concretecalc', 'feet-inches-calculator', 'flooring-calculator', 'paint-calculator', 'vinyl-fence-calculator'].map(name => [name, `/calculators/${name}.php`])];
   const selected = process.argv.slice(2);
   for (const [name, route] of pages.filter(([name]) => !selected.length || selected.includes(name))) {
     const url = new URL(route, 'https://justsmartchoice.com');
@@ -48,6 +53,13 @@ async function main() {
     if (!response.ok || new URL(response.url).hostname !== url.hostname) throw new Error(`Public page unavailable: ${url.pathname} (${response.status})`);
     const dom = new JSDOM(await response.text());
     const document = dom.window.document;
+    document.querySelectorAll('.preloader').forEach(node => node.remove());
+    document.querySelectorAll('button[onclick]').forEach(button => {
+      if (button.getAttribute('onclick') === 'history.back()') {
+        button.removeAttribute('onclick');
+        button.setAttribute('data-mobile-href', 'https://justsmartchoice.com/toolbox.php');
+      }
+    });
     document.querySelectorAll('base, meta[http-equiv], iframe').forEach(node => node.remove());
     const base = document.createElement('base');
     base.href = './';
@@ -90,13 +102,16 @@ async function main() {
     for (const style of document.querySelectorAll('style')) style.textContent = await rewriteUrls(style.textContent, url, 'resources/');
     document.querySelectorAll('a[href]').forEach(link => {
       const href = link.getAttribute('href');
-      if (!href.startsWith('#')) { link.href = new URL(href, url).href; link.target = '_blank'; link.rel = 'noopener noreferrer'; }
+      if (!href.startsWith('#')) {
+        const baseUrl = route.startsWith('/calculators/') && /^[^/]+\.php(?:[?#]|$)/.test(href) && !/calculator|calc\.php/.test(href) ? new URL('/', url) : url;
+        link.href = new URL(href, baseUrl).href; link.target = '_blank'; link.rel = 'noopener noreferrer';
+      }
     });
     // This is a design preview. Never submit production forms from a copied page.
     document.querySelectorAll('form').forEach(form => {
       form.removeAttribute('action');
       // Local construction calculators have no server-side submission.
-      if (!['fractions'].includes(name)) {
+      if (!['fractions', 'calculator', 'concretecalc', 'feet-inches-calculator', 'flooring-calculator', 'paint-calculator', 'vinyl-fence-calculator'].includes(name)) {
         form.querySelectorAll('input, select, textarea, button').forEach(control => control.disabled = true);
       }
     });

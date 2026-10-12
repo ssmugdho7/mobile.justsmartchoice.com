@@ -10,6 +10,8 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'document_download.dart';
 import 'navigation_policy.dart';
+import 'toolbox_navigation.dart';
+import 'toolbox_unavailable.dart';
 import 'quick_links.dart';
 import 'site_unavailable.dart';
 
@@ -162,7 +164,7 @@ class _CrmBrowserState extends State<CrmBrowser> {
   void _info() => showAboutDialog(
     context: context,
     applicationName: 'Smart Choice Mobile',
-    applicationVersion: '0.5.1',
+    applicationVersion: '0.5.2',
     children: const [
       Text(
         'CRM: crm.justsmartchoice.com\nApp downloads: mobile.justsmartchoice.com\nUses your existing CRM account and records.',
@@ -209,6 +211,24 @@ class _CrmBrowserState extends State<CrmBrowser> {
   Future<NavigationActionPolicy> _navigate(NavigationAction action) async {
     final uri = action.request.url;
     if (uri == null) return NavigationActionPolicy.CANCEL;
+    if (action.isForMainFrame != false &&
+        ToolboxNavigation.isMissingResource(uri)) {
+      setState(() {
+        _current = uri;
+        _unavailable = true;
+        _httpError = true;
+      });
+      return NavigationActionPolicy.CANCEL;
+    }
+    final resolved = ToolboxNavigation.resolve(uri);
+    if (action.isForMainFrame != false &&
+        (action.request.method ?? 'GET').toUpperCase() == 'GET' &&
+        resolved != uri) {
+      await _web?.loadUrl(
+        urlRequest: URLRequest(url: WebUri(resolved.toString())),
+      );
+      return NavigationActionPolicy.CANCEL;
+    }
     final decision = NavigationPolicy.decide(uri);
     if (decision == NavigationDecision.internal) {
       return NavigationActionPolicy.ALLOW;
@@ -247,6 +267,16 @@ class _CrmBrowserState extends State<CrmBrowser> {
   }
 
   Future<void> _download(DownloadStartRequest request) async {
+    if (ToolboxNavigation.isMissingResource(request.url)) {
+      if (mounted) {
+        setState(() {
+          _current = request.url;
+          _unavailable = true;
+          _httpError = true;
+        });
+      }
+      return;
+    }
     if (_downloading) {
       _message('A document is already downloading.');
       return;
@@ -386,14 +416,15 @@ class _CrmBrowserState extends State<CrmBrowser> {
                 initialUrlRequest: widget.windowId == null
                     ? URLRequest(
                         url: WebUri(
-                          (widget.initialUri != null &&
-                                      NavigationPolicy.decide(
-                                            widget.initialUri!,
-                                          ) ==
-                                          NavigationDecision.internal
-                                  ? widget.initialUri!
-                                  : NavigationPolicy.home)
-                              .toString(),
+                          ToolboxNavigation.resolve(
+                            widget.initialUri != null &&
+                                    NavigationPolicy.decide(
+                                          widget.initialUri!,
+                                        ) ==
+                                        NavigationDecision.internal
+                                ? widget.initialUri!
+                                : NavigationPolicy.home,
+                          ).toString(),
                         ),
                       )
                     : null,
@@ -438,6 +469,18 @@ class _CrmBrowserState extends State<CrmBrowser> {
                 },
                 onLoadStart: (controller, url) async {
                   if (url == null || url.toString() == 'about:blank') return;
+                  if (ToolboxNavigation.isMissingResource(url)) {
+                    await controller.stopLoading();
+                    if (mounted) {
+                      setState(() {
+                        _current = url;
+                        _unavailable = true;
+                        _httpError = true;
+                        _progress = 1;
+                      });
+                    }
+                    return;
+                  }
                   if (NavigationPolicy.decide(url) !=
                       NavigationDecision.internal) {
                     await controller.stopLoading();
@@ -532,7 +575,16 @@ class _CrmBrowserState extends State<CrmBrowser> {
               ),
             if (_unavailable)
               Positioned.fill(
-                child: SiteUnavailable(onRetry: _retry, httpError: _httpError),
+                child: ToolboxNavigation.isMissingResource(_current)
+                    ? ToolboxUnavailable(
+                        onNavigate: (uri) async {
+                          setState(() => _unavailable = false);
+                          await _web?.loadUrl(
+                            urlRequest: URLRequest(url: WebUri(uri.toString())),
+                          );
+                        },
+                      )
+                    : SiteUnavailable(onRetry: _retry, httpError: _httpError),
               ),
           ],
         ),

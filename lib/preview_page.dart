@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'embedded_page.dart';
 import 'navigation_policy.dart';
 import 'preview_destination.dart';
+import 'external_resource_page.dart';
+import 'toolbox_unavailable.dart';
 
 /// Live CRM pages retain their own authentication. Public website snapshots
 /// avoid weakening the website's frame restrictions for the browser preview.
@@ -19,38 +21,18 @@ class PreviewPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (NavigationPolicy.isHttps(uri) &&
+        !NavigationPolicy.isAppPage(uri) &&
+        uri.host != NavigationPolicy.meetingHost) {
+      return ExternalResourcePage(
+        uri: uri,
+        onBack: () =>
+            onNavigate(Uri.parse('https://justsmartchoice.com/toolbox.php')),
+      );
+    }
     if (PreviewDestination.missingTools.contains(uri.path) &&
         NavigationPolicy.isWebsite(uri)) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.construction, size: 40),
-              const SizedBox(height: 16),
-              Text(
-                'This tool is currently unavailable',
-                style: Theme.of(context).textTheme.titleLarge,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 12),
-              const Text(
-                'The original website returns a missing-page error for this calculator. You can continue using the other tools.',
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 20),
-              FilledButton.icon(
-                onPressed: () => onNavigate(
-                  Uri.parse('https://justsmartchoice.com/toolbox.php'),
-                ),
-                icon: const Icon(Icons.arrow_back),
-                label: const Text('Back to Toolbox'),
-              ),
-            ],
-          ),
-        ),
-      );
+      return ToolboxUnavailable(onNavigate: onNavigate);
     }
     return Column(
       children: [

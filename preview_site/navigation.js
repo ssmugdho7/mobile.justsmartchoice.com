@@ -5,9 +5,9 @@
   })();
   if (!parentOrigin) return;
   document.addEventListener('click', function (event) {
-    const link = event.target.closest && event.target.closest('a[href]');
+    const link = event.target.closest && event.target.closest('a[href],button[data-mobile-href]');
     if (!link) return;
-    const href = link.getAttribute('href');
+    const href = link.getAttribute('href') || link.getAttribute('data-mobile-href');
     if (!href || href.startsWith('#')) return;
     let url;
     try { url = new URL(href, location.href); } catch (_) { return; }

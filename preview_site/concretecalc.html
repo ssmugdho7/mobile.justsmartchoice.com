@@ -1,0 +1,232 @@
+<!DOCTYPE html><html lang="en"><head><base href="./">
+  <title>Concrete Volume Calculator - Smart Choice Contractors</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0">
+
+  <meta name="description" content="Calculate concrete volume for slabs, walls, footers, columns, steps, and curbs. Get cubic yards, cubic feet, and cubic meters plus material cost.">
+  <meta property="og:title" content="Concrete Volume Calculator - Smart Choice Contractors">
+  <meta property="og:description" content="Free online concrete calculator for slabs, walls, columns, steps, footers, and curbs. Calculates cubic yards, cubic feet, cubic meters, and cost.">
+  <meta property="og:image" content="images/logo-638x310.png">
+  <meta property="og:url" content="https://www.smartchoiceusa.com/concrete-calculator">
+  <meta property="og:type" content="website">
+  <link rel="icon" href="resources/bcb98b12ab2632504f4a.ico" type="image/x-icon">
+  <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Raleway:300,400,500,700">
+  <link rel="stylesheet" href="resources/08877ad0f0277c8a34e0.css">
+<script>window.gtag=function(){};window.dataLayer=[];document.addEventListener('submit',function(e){e.preventDefault();},true);</script><script src="navigation.js"></script><style>.page-header,.page > .section-banner:first-child{display:none!important}.swiper-slide-active [data-caption-animate].not-animated{opacity:1;visibility:visible}@media(max-width:400px){.swiper-slide .swiper-slide-caption .cta-box-heading{font-size:clamp(26px,8vw,32px)!important}}</style></head>
+
+<!-- Google tag (gtag.js) -->
+
+
+
+<body>
+
+  <div class="page">
+
+
+    <!--Header-->
+    <header class="section page-header">
+      <div class="rd-navbar-wrap">
+        <nav class="rd-navbar" data-layout="rd-navbar-fixed" data-sm-layout="rd-navbar-fixed" data-md-layout="rd-navbar-static" data-md-device-layout="rd-navbar-fixed" data-lg-layout="rd-navbar-static" data-lg-device-layout="rd-navbar-fixed" data-xl-layout="rd-navbar-static" data-xl-device-layout="rd-navbar-static" data-md-stick-up-offset="185px" data-lg-stick-up-offset="185px" data-xl-stick-up-offset="185px" data-xxl-stick-up-offset="185px" data-md-stick-up="true" data-lg-stick-up="true" data-xl-stick-up="true" data-xxl-stick-up="true">
+          <div class="rd-navbar-section rd-navbar-static-collapse">
+            <div class="rd-navbar-container">
+              <div class="rd-navbar-panel">
+                <button class="rd-navbar-toggle" data-rd-navbar-toggle=".rd-navbar-nav"><span></span></button>
+                <div class="rd-navbar-logo">
+                  <a href="https://justsmartchoice.com/index.php" target="_blank" rel="noopener noreferrer">
+                    <img class="logo-small" src="resources/786f51d819774032cc8e.png" alt="" width="182" height="26">
+                    <img class="logo-default" src="resources/63aa68128132a5ce8050.png" alt="" width="319" height="155">
+                  </a>
+                </div>
+                <button class="rd-navbar-info-toggle" data-rd-navbar-toggle=".rd-navbar-info"><span></span></button>
+              </div>
+              <div class="rd-navbar-info">
+                <div class="info">
+                  <div class="info-heading">Need Help?</div>
+                  <a class="info-link" href="tel:%E2%80%AA(727) 755-3786%E2%80%AC" target="_blank" rel="noopener noreferrer"><span class="info-icon fa-mobile"></span> ‪(727) 755-3786‬</a>
+                  <div class="info-small"><strong>Opening Hours:</strong> 8am-6pm PST M-Fr; 8am-3pm PST Sat</div>
+                </div>
+              </div>
+            </div>
+
+            <!--Navbar-->
+            <div class="rd-navbar-section">
+              <div class="rd-navbar-container">
+                <ul class="rd-navbar-nav">
+                  <li class="rd-nav-item "><a class="rd-nav-link" href="https://justsmartchoice.com/index.php" target="_blank" rel="noopener noreferrer">Home</a></li>
+                  <li class="rd-nav-item "><a class="rd-nav-link" href="https://justsmartchoice.com/about.php" target="_blank" rel="noopener noreferrer">About</a></li>
+                  <li class="rd-nav-item "><a class="rd-nav-link" href="https://justsmartchoice.com/services.php" target="_blank" rel="noopener noreferrer">Services</a></li>
+                  <li class="rd-nav-item "><a class="rd-nav-link" href="https://justsmartchoice.com/pricing.php" target="_blank" rel="noopener noreferrer">Pricing</a></li>
+                  <li class="rd-nav-item "><a class="rd-nav-link" href="https://justsmartchoice.com/financing.php" target="_blank" rel="noopener noreferrer">Financing</a></li>
+                  <li class="rd-nav-item "><a class="rd-nav-link" href="https://justsmartchoice.com/contacts.php" target="_blank" rel="noopener noreferrer">Contacts</a></li>
+                  <li class="rd-nav-item "><a class="rd-nav-link" href="https://justsmartchoice.com/login.php" target="_blank" rel="noopener noreferrer">Login</a></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </nav>
+      </div>
+    </header>
+
+    <!-- Concrete Calculator Section -->
+    <section class="section-sm">
+      <div class="container">
+        <h2 class="text-uppercase text-center">Concrete <span class="font-weight-light">Volume Calculator</span></h2>
+        <div class="calculator">
+          <label for="shape">Choose Concrete Shape:</label>
+          <select id="shape" onchange="updateFields()">
+            <option value="slab">Square Slab</option>
+            <option value="roundslab">Round Slab</option>
+            <option value="wall">Wall</option>
+            <option value="footer">Footer</option>
+            <option value="squarecolumn">Square Column</option>
+            <option value="roundcolumn">Round Column</option>
+            <option value="steps">Steps</option>
+            <option value="curb">Curbs &amp; Gutters</option>
+          </select>
+
+          <div id="inputs"></div>
+
+          <label>Quantity:</label>
+          <input type="number" id="quantity" value="1" min="1">
+
+          <label>Price per Unit (optional):</label>
+          <input type="number" id="price" placeholder="Enter price">
+          <select id="priceUnit">
+            <option value="ft3">per ft³</option>
+            <option value="yd3">per yd³</option>
+            <option value="m3">per m³</option>
+          </select>
+
+          <button onclick="calculateConcrete()">Calculate</button>
+          <div class="results" id="results"></div>
+
+          <!-- Go Back Button -->
+          <button class="go-back-btn" data-mobile-href="https://justsmartchoice.com/toolbox.php">← Go Back</button>
+
+          <div class="powered">Powered by Smart Choice Contractors</div>
+        </div>
+      </div>
+    </section>
+
+    <!--bottom-banner-->
+
+    <!--Footer-->
+      </div>
+
+  <script>
+    const inputsDiv = document.getElementById("inputs");
+    function updateFields() {
+      const shape = document.getElementById("shape").value;
+      let html = "";
+      switch(shape) {
+        case "slab":
+        case "footer":
+          html = `
+            <label>Width (ft):</label><input type="number" id="width">
+            <label>Length (ft):</label><input type="number" id="length">
+            <label>Depth (ft):</label><input type="number" id="depth">`;
+          break;
+        case "roundslab":
+          html = `
+            <label>Diameter (ft):</label><input type="number" id="diameter">
+            <label>Depth (ft):</label><input type="number" id="depth">`;
+          break;
+        case "wall":
+          html = `
+            <label>Thickness (ft):</label><input type="number" id="thickness">
+            <label>Length (ft):</label><input type="number" id="length">
+            <label>Height (ft):</label><input type="number" id="height">`;
+          break;
+        case "squarecolumn":
+          html = `
+            <label>Width (ft):</label><input type="number" id="width">
+            <label>Length (ft):</label><input type="number" id="length">
+            <label>Height (ft):</label><input type="number" id="height">`;
+          break;
+        case "roundcolumn":
+          html = `
+            <label>Diameter (ft):</label><input type="number" id="diameter">
+            <label>Height (ft):</label><input type="number" id="height">`;
+          break;
+        case "steps":
+          html = `
+            <label>Platform Depth (ft):</label><input type="number" id="platform">
+            <label>Rise Height (ft):</label><input type="number" id="rise">
+            <label>Run Depth (ft):</label><input type="number" id="run">
+            <label>Width (ft):</label><input type="number" id="width">
+            <label>Number of Steps:</label><input type="number" id="numsteps">`;
+          break;
+        case "curb":
+          html = `
+            <label>Curb Depth (ft):</label><input type="number" id="curbdepth">
+            <label>Curb Height (ft):</label><input type="number" id="curbheight">
+            <label>Flag Thickness (ft):</label><input type="number" id="flagthick">
+            <label>Length (ft):</label><input type="number" id="length">
+            <label>Gutter Width (ft):</label><input type="number" id="gutter">`;
+          break;
+      }
+      inputsDiv.innerHTML = html;
+    }
+    updateFields();
+
+    function calculateConcrete() {
+      const shape = document.getElementById("shape").value;
+      const qty = parseFloat(document.getElementById("quantity").value) || 1;
+      let ft3 = 0;
+
+      if(shape === "slab" || shape === "footer") {
+        ft3 = (get("width")*get("length")*get("depth"));
+      }
+      else if(shape === "roundslab") {
+        ft3 = (Math.PI * Math.pow(get("diameter")/2,2) * get("depth"));
+      }
+      else if(shape === "wall") {
+        ft3 = (get("thickness")*get("length")*get("height"));
+      }
+      else if(shape === "squarecolumn") {
+        ft3 = (get("width")*get("length")*get("height"));
+      }
+      else if(shape === "roundcolumn") {
+        ft3 = (Math.PI * Math.pow(get("diameter")/2,2) * get("height"));
+      }
+      else if(shape === "steps") {
+        const platform = get("platform"), rise = get("rise"), run = get("run"), width = get("width"), n = get("numsteps");
+        let platformVol = platform * (rise * n) * width;
+        let stepVol = 0;
+        for(let i=1;i<n;i++) {
+          stepVol += run * (rise * i) * width;
+        }
+        ft3 = platformVol + stepVol;
+      }
+      else if(shape === "curb") {
+        let curbVol = get("curbdepth") * (get("curbheight")+get("flagthick")) * get("length");
+        let gutterVol = get("gutter") * get("flagthick") * get("length");
+        ft3 = curbVol + gutterVol;
+      }
+
+      ft3 *= qty;
+      const yd3 = ft3/27;
+      const m3 = ft3*0.0283;
+
+      let price = parseFloat(document.getElementById("price").value) || 0;
+      let unit = document.getElementById("priceUnit").value;
+      let cost = 0;
+      if(price>0) {
+        if(unit==="ft3") cost = price*ft3;
+        if(unit==="yd3") cost = price*yd3;
+        if(unit==="m3") cost = price*m3;
+      }
+
+      let result = `
+        <b>Volume:</b><br>
+        Cubic Feet: ${ft3.toFixed(2)} ft³<br>
+        Cubic Yards: ${yd3.toFixed(2)} yd³<br>
+        Cubic Meters: ${m3.toFixed(2)} m³<br>`;
+      if(cost>0) result += `<br><b>Total Cost:</b> $${cost.toFixed(2)}`;
+      document.getElementById("results").innerHTML = result;
+    }
+    function get(id){ return parseFloat(document.getElementById(id).value) || 0; }
+  </script>
+
+
+</body></html>

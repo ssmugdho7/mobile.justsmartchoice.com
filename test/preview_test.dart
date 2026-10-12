@@ -45,17 +45,19 @@ void main() {
     );
     expect(find.textContaining('new tab'), findsNothing);
   });
-  testWidgets('missing source calculator stays inside the preview', (
+  testWidgets('missing agreement stays inside the preview with recovery', (
     tester,
   ) async {
     await tester.pumpWidget(
       MaterialApp(
         home: PortalSurface(
-          initialUri: Uri.parse('https://justsmartchoice.com/calculator.php'),
+          initialUri: Uri.parse(
+            'https://justsmartchoice.com/subcontractor-agreement.php',
+          ),
         ),
       ),
     );
-    expect(find.text('This tool is currently unavailable'), findsOneWidget);
+    expect(find.text('This resource is currently unavailable'), findsOneWidget);
     await tester.tap(find.text('Back to Toolbox'));
     await tester.pumpAndSettle();
     expect(
