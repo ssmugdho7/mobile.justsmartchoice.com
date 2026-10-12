@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<base href="https://ssmugdho7.github.io/mobile.justsmartchoice.com/">
+<base href="/preview/">
+<meta name="sc-preview-assets" content="https://ssmugdho7.github.io/mobile.justsmartchoice.com/">
 <title>Smart Choice Mobile Preview</title>
 <meta name="description" content="Smart Choice mobile interface preview">
 <style>html,body{margin:0;height:100%;background:#f4f7f9;font:14px system-ui}</style>
@@ -13,7 +14,7 @@
 // Load public app assets, while the document stays on mobile.justsmartchoice.com.
 // CRM frames therefore share the same site and keep server cookie protection.
 const bootstrap = document.createElement('script');
-bootstrap.src = new URL('flutter_bootstrap.js?preview=' + Date.now(), document.baseURI).href;
+bootstrap.src = new URL('flutter_bootstrap.js?preview=' + Date.now(), document.querySelector('meta[name="sc-preview-assets"]').content).href;
 bootstrap.async = true;
 document.body.appendChild(bootstrap);
 </script>

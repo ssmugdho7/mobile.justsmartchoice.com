@@ -25,13 +25,19 @@ class _EmbeddedPageState extends State<EmbeddedPage> {
   late final String _viewType;
   web.HTMLIFrameElement? _frame;
   late final JSFunction _listener;
+  String _source() {
+    final assets = web.document.querySelector('meta[name="sc-preview-assets"]');
+    final base = assets?.getAttribute('content') ?? web.document.baseURI;
+    return Uri.parse(base).resolve(widget.uri.toString()).toString();
+  }
+
   @override
   void initState() {
     super.initState();
     _viewType = 'smart-choice-inline-${_nextId++}';
     ui_web.platformViewRegistry.registerViewFactory(_viewType, (_) {
       final frame = web.HTMLIFrameElement()
-        ..src = widget.uri.toString()
+        ..src = _source()
         ..title = widget.title
         // No popups or top navigation: links cannot eject the mobile interface.
         // CRM retains its own HTTPS, sessions, CAPTCHA, CSRF and permissions.
@@ -49,9 +55,7 @@ class _EmbeddedPageState extends State<EmbeddedPage> {
       if (_frame == null || event.source != _frame!.contentWindow) return;
       // Only copied public pages send navigation messages. The authenticated
       // CRM frame is never read, proxied or copied by this interface.
-      final expected = Uri.parse(web.document.baseURI)
-          .resolve(widget.uri.toString())
-          .origin;
+      final expected = Uri.parse(_source()).origin;
       if (event.origin != expected) return;
       final data = event.data.dartify();
       if (data is! Map ||
@@ -71,7 +75,7 @@ class _EmbeddedPageState extends State<EmbeddedPage> {
   @override
   void didUpdateWidget(EmbeddedPage oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.uri != widget.uri) _frame?.src = widget.uri.toString();
+    if (oldWidget.uri != widget.uri) _frame?.src = _source();
     if (oldWidget.title != widget.title) _frame?.title = widget.title;
   }
 
