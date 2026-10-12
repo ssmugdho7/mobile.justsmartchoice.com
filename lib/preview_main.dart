@@ -1,3 +1,5 @@
+import 'dart:ui_web' as ui_web;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 
@@ -6,7 +8,10 @@ import 'app_theme.dart';
 
 SemanticsHandle? previewSemantics;
 
+// This preview uses in-app state, not URL routes. Older cached hosting wrappers
+// must not make Flutter rewrite history against their remote asset base.
 void main() {
+  ui_web.urlStrategy = null;
   WidgetsFlutterBinding.ensureInitialized();
   previewSemantics = SemanticsBinding.instance.ensureSemantics();
   runApp(const PreviewApp());
