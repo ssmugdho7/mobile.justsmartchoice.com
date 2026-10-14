@@ -112,4 +112,18 @@ void main() {
       );
     },
   );
+  test(
+    'User popup metadata respects WebKit and Android platform guarantees',
+    () {
+      for (final webKit in [true, false]) {
+        expect(NavigationPolicy.canOpenWindow(true, usesWebKit: webKit), true);
+        expect(
+          NavigationPolicy.canOpenWindow(false, usesWebKit: webKit),
+          false,
+        );
+      }
+      expect(NavigationPolicy.canOpenWindow(null, usesWebKit: false), false);
+      expect(NavigationPolicy.canOpenWindow(null, usesWebKit: true), true);
+    },
+  );
 }

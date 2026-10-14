@@ -22,6 +22,9 @@ class NavigationPolicy {
   static bool canUseMedia(Uri uri) =>
       isHttps(uri) && (uri.host == crmHost || uri.host == meetingHost);
 
+  static bool canOpenWindow(bool? hasGesture, {required bool usesWebKit}) =>
+      hasGesture == true || (usesWebKit && hasGesture == null);
+
   static NavigationDecision decide(Uri uri) {
     // Never switch the live-account app to a different CRM environment.
     if (isOtherCrm(uri)) {

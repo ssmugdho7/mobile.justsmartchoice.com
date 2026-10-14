@@ -531,7 +531,16 @@ class _CrmBrowserState extends State<CrmBrowser> {
                 onDownloadStartRequest: (controller, request) =>
                     _download(request),
                 onCreateWindow: (controller, action) async {
-                  if (!mounted || action.hasGesture != true) return false;
+                  // iOS's plugin reports no hasGesture metadata. WebKit itself
+                  // enforces user initiation because automatic JS windows are
+                  // disabled above; Android must supply a positive gesture.
+                  if (!mounted ||
+                      !NavigationPolicy.canOpenWindow(
+                        action.hasGesture,
+                        usesWebKit: defaultTargetPlatform == TargetPlatform.iOS,
+                      )) {
+                    return false;
+                  }
                   final url = action.request.url;
                   if (url != null &&
                       url.toString() != 'about:blank' &&
