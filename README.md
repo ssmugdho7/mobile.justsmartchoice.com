@@ -1,6 +1,6 @@
 # Smart Choice Mobile
 
-Editable Flutter Android app for the existing **https://crm.justsmartchoice.com**.
+Editable Flutter Android and iOS app for the existing **https://crm.justsmartchoice.com**.
 **https://mobile.justsmartchoice.com** hosts its download page, not a second CRM.
 Staff and customers use their existing accounts and records. Actions affect live
 CRM data; this app does not duplicate the backend, database or authorization.
@@ -45,7 +45,7 @@ an Android 10+ ARM64 **debug-signed testing build**, not a Play Store release.
   (10 MiB limit). Payment, approval, signature and other submission forms are
   untouched. Generic blob exports or other custom POST downloads need separate
   implementation if encountered.
-- Files save to Android `Downloads/SmartChoice` using MediaStore; no broad
+- Files save to Android `Downloads/SmartChoice` using MediaStore or iOS Files → Smart Choice Mobile → SmartChoice; no broad
   storage permission. Private staging files are deleted after save/failure.
 
 ## Verification
@@ -119,7 +119,9 @@ The download site's source is now `website/`; `web/` is Flutter's browser build 
 
 ## Apple release preparation
 
-An iOS project is included with the app bundle identifier and camera/microphone/photo purpose strings. It is a scaffold, not a verified iOS release: this Mac currently has Command Line Tools but not full Xcode. Before TestFlight, install Xcode, configure the private Apple signing team, implement and test the iOS document-saving channel, test WebView login/uploads/video meetings on a real iPhone, and perform App Store review preparation. Never publish debug signing keys or Apple credentials. Android's native document channel is not an iOS implementation.
+iOS now includes native document save/open in Files, camera/microphone build configuration, branded icons and a launch screen. Run `./tool/check-ios-source.sh` for Foundation storage/source checks. `.github/workflows/ios.yml` compiles unsigned iOS on an Xcode runner; `./tool/check-ios-build.sh` runs the same check locally with full Xcode.
+
+A signed release still requires the private Apple team, real iPhone/iPad testing, account-removal verification and App Store metadata/privacy review. This Mac has Command Line Tools only. Read [page audit and Apple release gates](docs/ios-release-readiness.md) for actual test results, fixes and remaining dependencies. Unsigned compilation and Android tests are not TestFlight/App Store approval.
 
 ## In-app navigation and browser preview origin
 

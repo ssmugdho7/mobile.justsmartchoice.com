@@ -75,6 +75,28 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+  testWidgets('settings keep privacy and terms accessible on a short screen', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(800, 360);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    tester.platformDispatcher.textScaleFactorTestValue = 1.5;
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+    await tester.pumpWidget(SmartChoiceApp(publicPageBuilder: publicPage));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('App settings'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Account privacy'));
+    expect(find.text('Account privacy'), findsOneWidget);
+    await tester.ensureVisible(find.text('Privacy Policy'));
+    expect(find.text('Privacy Policy'), findsOneWidget);
+    await tester.ensureVisible(find.text('Terms of Service'));
+    expect(find.text('Terms of Service'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('launch precedes menu; Shop is lazy and back returns to menu', (
     tester,
   ) async {

@@ -24,7 +24,16 @@ class _PublicSiteViewState extends State<PublicSiteView> {
   Widget build(BuildContext context) => PreviewPage(
     uri: _uri,
     title: 'Smart Choice public page',
-    onNavigate: (uri) =>
-        followPreviewLink(uri, (next) => setState(() => _uri = next)),
+    onNavigate: (uri) => followPreviewLink(
+      uri,
+      (next) => setState(() => _uri = next),
+      onUnavailable: () {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('No app can open this link.')),
+          );
+        }
+      },
+    ),
   );
 }

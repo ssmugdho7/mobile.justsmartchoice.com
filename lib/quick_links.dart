@@ -19,7 +19,7 @@ enum QuickLink {
   appointment(
     'Make appointment',
     Icons.calendar_month_outlined,
-    'https://crm.justsmartchoice.com/appointly/appointments',
+    'https://crm.justsmartchoice.com/appointly/appointments_public/book',
   ),
   toolbox(
     'Toolbox',
@@ -49,6 +49,10 @@ enum QuickLink {
       return 'Contact Us';
     }
     if (uri?.host == 'crm.justsmartchoice.com' &&
+        uri?.path == '/clients/gdpr') {
+      return 'Account privacy';
+    }
+    if (uri?.host == 'crm.justsmartchoice.com' &&
         uri?.path == '/authentication/login') {
       return 'Client Login';
     }
@@ -62,6 +66,11 @@ enum QuickLink {
         '/calculators/vinyl-fence-calculator.php' => 'Vinyl Fence Calculator',
         '/fractionscalc.php' => 'Feet & Inches Calculator',
         '/pricing.php' => 'Pricing',
+        '/privacy.php' => 'Privacy Policy',
+        '/terms.php' => 'Terms of Service',
+        '/cookie-policy.php' => 'Cookie Policy',
+        '/legal.php' => 'Legal',
+        '/sitemap.php' => 'Sitemap',
         '/forms.php' => 'Forms Library',
         '/contracts.php' => 'Contracts & Bids',
         _ => 'Smart Choice',

@@ -6,6 +6,20 @@ import 'package:web/web.dart' as web;
 
 import 'navigation_policy.dart';
 
+void applyEmbeddedMediaPermissions(web.HTMLIFrameElement frame, Uri uri) {
+  if (NavigationPolicy.canUseMedia(uri)) {
+    // Browser permission prompts still apply. Delegate media only to the
+    // exact CRM/Jitsi origins, never to public snapshots or provider sites.
+    const origins = 'https://crm.justsmartchoice.com https://meet.jit.si';
+    frame.setAttribute(
+      'allow',
+      'camera $origins; microphone $origins; fullscreen $origins',
+    );
+  } else {
+    frame.removeAttribute('allow');
+  }
+}
+
 class EmbeddedPage extends StatefulWidget {
   const EmbeddedPage({
     super.key,
@@ -48,6 +62,7 @@ class _EmbeddedPageState extends State<EmbeddedPage> {
         ..style.border = '0'
         ..style.width = '100%'
         ..style.height = '100%';
+      applyEmbeddedMediaPermissions(frame, widget.uri);
       _frame = frame;
       return frame;
     });
@@ -80,7 +95,10 @@ class _EmbeddedPageState extends State<EmbeddedPage> {
   @override
   void didUpdateWidget(EmbeddedPage oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.uri != widget.uri) _frame?.src = _source();
+    if (oldWidget.uri != widget.uri && _frame != null) {
+      applyEmbeddedMediaPermissions(_frame!, widget.uri);
+      _frame!.src = _source();
+    }
     if (oldWidget.title != widget.title) _frame?.title = widget.title;
   }
 

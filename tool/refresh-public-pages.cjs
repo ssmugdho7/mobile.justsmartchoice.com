@@ -45,7 +45,7 @@ async function main() {
     }
     return cache.get(url.href);
   }
-  const pages = [['home', '/'], ['about', '/about.php'], ['contact', '/contacts.php'], ['toolbox', '/toolbox.php'], ['fractions', '/fractionscalc.php'], ['pricing', '/pricing.php'], ['forms', '/forms.php'], ['contracts', '/contracts.php'], ...['calculator', 'concretecalc', 'feet-inches-calculator', 'flooring-calculator', 'paint-calculator', 'vinyl-fence-calculator'].map(name => [name, `/calculators/${name}.php`])];
+  const pages = [['home', '/'], ['about', '/about.php'], ['contact', '/contacts.php'], ['toolbox', '/toolbox.php'], ['fractions', '/fractionscalc.php'], ['pricing', '/pricing.php'], ['forms', '/forms.php'], ['contracts', '/contracts.php'], ...['terms', 'privacy', 'cookie-policy', 'legal', 'sitemap', 'partners', 'investors', 'services', 'financing', 'blog', 'faqs', 'career', 'promo_flooring', 'charger', 'login'].map(name => [name, `/${name}.php`]), ...['calculator', 'concretecalc', 'feet-inches-calculator', 'flooring-calculator', 'paint-calculator', 'vinyl-fence-calculator'].map(name => [name, `/calculators/${name}.php`])];
   const selected = process.argv.slice(2);
   for (const [name, route] of pages.filter(([name]) => !selected.length || selected.includes(name))) {
     const url = new URL(route, 'https://justsmartchoice.com');

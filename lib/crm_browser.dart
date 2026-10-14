@@ -2,6 +2,7 @@ import 'dart:collection';
 import 'dart:convert';
 import 'dart:math';
 
+import 'package:flutter/foundation.dart' show defaultTargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
@@ -9,6 +10,8 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'document_download.dart';
+import 'document_cookie.dart';
+import 'media_permissions.dart';
 import 'navigation_policy.dart';
 import 'toolbox_navigation.dart';
 import 'toolbox_unavailable.dart';
@@ -95,6 +98,7 @@ class _CrmBrowserState extends State<CrmBrowser> {
       _saved(document);
       return true;
     } catch (_) {
+      _message('Unable to save this PDF. Please try again.');
       return false;
     } finally {
       if (mounted) setState(() => _downloading = false);
@@ -105,7 +109,7 @@ class _CrmBrowserState extends State<CrmBrowser> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('${document.name} saved to Downloads'),
+        content: Text('${document.name} saved to $_downloadLocation'),
         action: SnackBarAction(
           label: 'Open',
           onPressed: () async {
@@ -113,7 +117,7 @@ class _CrmBrowserState extends State<CrmBrowser> {
               await _downloads.open(document);
             } catch (_) {
               _message(
-                'Saved to Downloads. Install a compatible viewer to open this file.',
+                'The document is saved. Try opening it from $_downloadLocation.',
               );
             }
           },
@@ -121,6 +125,11 @@ class _CrmBrowserState extends State<CrmBrowser> {
       ),
     );
   }
+
+  String get _downloadLocation =>
+      Theme.of(context).platform == TargetPlatform.iOS
+      ? 'Files → Smart Choice Mobile → SmartChoice'
+      : 'Downloads/SmartChoice';
 
   InAppWebViewController? _web;
   final _downloads = DocumentDownload();
@@ -164,7 +173,7 @@ class _CrmBrowserState extends State<CrmBrowser> {
   void _info() => showAboutDialog(
     context: context,
     applicationName: 'Smart Choice Mobile',
-    applicationVersion: '0.5.3',
+    applicationVersion: '0.5.4',
     children: const [
       Text(
         'CRM: crm.justsmartchoice.com\nApp downloads: mobile.justsmartchoice.com\nUses your existing CRM account and records.',
@@ -235,36 +244,23 @@ class _CrmBrowserState extends State<CrmBrowser> {
     }
     if (decision == NavigationDecision.external &&
         action.isForMainFrame != false) {
-      if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
-        _message('No app can open this link.');
-      }
+      try {
+        if (await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+          return NavigationActionPolicy.CANCEL;
+        }
+      } catch (_) {}
+      _message('No app can open this link.');
     } else if (action.isForMainFrame != false) {
       _message('This link is outside the mobile CRM environment.');
     }
     return NavigationActionPolicy.CANCEL;
   }
 
-  Future<PermissionResponse> _media(PermissionRequest request) async {
-    final approved = <PermissionResourceType>[];
-    if (NavigationPolicy.canUseMedia(request.origin)) {
-      for (final resource in request.resources) {
-        final permission = resource == PermissionResourceType.CAMERA
-            ? Permission.camera
-            : resource == PermissionResourceType.MICROPHONE
-            ? Permission.microphone
-            : null;
-        if (permission != null && await permission.request().isGranted) {
-          approved.add(resource);
-        }
-      }
-    }
-    return PermissionResponse(
-      resources: approved,
-      action: approved.isEmpty
-          ? PermissionResponseAction.DENY
-          : PermissionResponseAction.GRANT,
-    );
-  }
+  Future<PermissionResponse> _media(PermissionRequest request) =>
+      MediaPermissions.authorize(
+        request,
+        ask: (permission) async => await permission.request().isGranted,
+      );
 
   Future<void> _download(DownloadStartRequest request) async {
     if (ToolboxNavigation.isMissingResource(request.url)) {
@@ -281,39 +277,31 @@ class _CrmBrowserState extends State<CrmBrowser> {
       _message('A document is already downloading.');
       return;
     }
-    if (!NavigationPolicy.isCrm(request.url)) {
-      _message('Only mobile CRM documents can be saved.');
+    final publicPdf = DocumentDownload.isPublicPdf(request.url);
+    if (!NavigationPolicy.isCrm(request.url) && !publicPdf) {
+      _message('Only CRM documents and listed Toolbox PDFs can be saved.');
       return;
     }
     setState(() => _downloading = true);
     try {
-      final cookies = await CookieManager.instance().getCookies(
-        url: request.url,
-      );
-      final document = await _downloads.save(
-        request.url,
-        cookie: cookies.map((c) => '${c.name}=${c.value}').join('; '),
-        userAgent: request.userAgent ?? 'SmartChoiceMobile',
-        filename: request.suggestedFilename,
-      );
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('${document.name} saved to Downloads'),
-          action: SnackBarAction(
-            label: 'Open',
-            onPressed: () async {
-              try {
-                await _downloads.open(document);
-              } catch (_) {
-                _message(
-                  'Saved to Downloads. Install a compatible viewer to open this file.',
-                );
-              }
-            },
-          ),
-        ),
-      );
+      final document = publicPdf
+          ? await _downloads.savePublicPdf(
+              request.url,
+              userAgent: request.userAgent ?? 'SmartChoiceMobile',
+              filename: request.suggestedFilename,
+            )
+          : await _downloads.save(
+              request.url,
+              cookie: DocumentCookies.header(
+                request.url,
+                await CookieManager.instance().getCookies(url: request.url),
+                allowMissingDomain:
+                    defaultTargetPlatform == TargetPlatform.android,
+              ),
+              userAgent: request.userAgent ?? 'SmartChoiceMobile',
+              filename: request.suggestedFilename,
+            );
+      _saved(document);
     } catch (_) {
       _message(
         'Unable to download. Check your connection and CRM login, then try again.',

@@ -134,33 +134,70 @@ class _AppShellState extends State<AppShell> {
       showDragHandle: true,
       builder: (sheetContext) => StatefulBuilder(
         builder: (context, updateSheet) => SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const ListTile(
-                title: Text(
-                  'App settings',
-                  style: TextStyle(fontWeight: FontWeight.bold),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const ListTile(
+                  title: Text(
+                    'App settings',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
                 ),
-              ),
-              SwitchListTile(
-                title: const Text('Dark Mode'),
-                value: _dark,
-                onChanged: (value) {
-                  _setDark(value);
-                  updateSheet(() {});
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.info_outline),
-                title: const Text('About'),
-                onTap: () {
-                  Navigator.pop(sheetContext);
-                  _select(1);
-                },
-              ),
-              const SizedBox(height: 16),
-            ],
+                SwitchListTile(
+                  title: const Text('Dark Mode'),
+                  value: _dark,
+                  onChanged: (value) {
+                    _setDark(value);
+                    updateSheet(() {});
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.info_outline),
+                  title: const Text('About'),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    _select(1);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.manage_accounts_outlined),
+                  title: const Text('Account privacy'),
+                  subtitle: const Text(
+                    'Client account access and removal requests',
+                  ),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    _openPortal('/clients/gdpr');
+                  },
+                ),
+                for (final policy in [
+                  (
+                    'Privacy Policy',
+                    '/privacy.php',
+                    Icons.privacy_tip_outlined,
+                  ),
+                  (
+                    'Terms of Service',
+                    '/terms.php',
+                    Icons.description_outlined,
+                  ),
+                ])
+                  ListTile(
+                    leading: Icon(policy.$3),
+                    title: Text(policy.$1),
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      _openPortal(
+                        NavigationPolicy.websiteHome
+                            .resolve(policy.$2)
+                            .toString(),
+                      );
+                    },
+                  ),
+                const SizedBox(height: 16),
+              ],
+            ),
           ),
         ),
       ),

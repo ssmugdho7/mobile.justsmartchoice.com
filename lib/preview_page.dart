@@ -34,6 +34,37 @@ class PreviewPage extends StatelessWidget {
         NavigationPolicy.isWebsite(uri)) {
       return ToolboxUnavailable(onNavigate: onNavigate);
     }
+    if (NavigationPolicy.isWebsite(uri) &&
+        !PreviewDestination.hasPublicPreview(uri)) {
+      return Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(28),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.web_asset_off_outlined, size: 44),
+              const SizedBox(height: 16),
+              Text(
+                'This page is not available in the browser preview',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'You can return to Shop and continue exploring the available preview pages here.',
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              FilledButton.icon(
+                onPressed: () => onNavigate(NavigationPolicy.websiteHome),
+                icon: const Icon(Icons.shopping_bag_outlined),
+                label: const Text('Back to Shop'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
     return Column(
       children: [
         if (NavigationPolicy.isWebsite(uri) && uri.path == '/contacts.php')

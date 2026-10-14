@@ -26,7 +26,7 @@ class Response extends Stream<List<int>> implements HttpClientResponse {
   Response(
     this.statusCode,
     this.headers, {
-    this.body = const [37, 80, 68, 70],
+    this.body = const [37, 80, 68, 70, 45],
     int? length,
   }) : contentLength = length ?? body.length;
   final List<int> body;
@@ -93,11 +93,11 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   late Directory temporary;
   final exports = <Map<Object?, Object?>>[];
-  var expectedBytes = <int>[37, 80, 68, 70];
+  var expectedBytes = <int>[37, 80, 68, 70, 45];
   setUp(() async {
     temporary = await Directory.systemTemp.createTemp('sc-download-test-');
     exports.clear();
-    expectedBytes = [37, 80, 68, 70];
+    expectedBytes = [37, 80, 68, 70, 45];
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(DocumentDownload.channel, (
           MethodCall call,
@@ -206,5 +206,78 @@ void main() {
       expect(exports, isEmpty);
       expect(await temporary.list().toList(), isEmpty);
     }
+  });
+  final publicPdf = Uri.parse(
+    'https://www.seminolecountyfl.gov/docs/default-source/pdf/construction-forms-exhibit-to-agreement.pdf',
+  );
+  Future<SavedDocument> savePublic(Client client) => DocumentDownload(
+    clientFactory: () => client,
+    temporaryDirectory: () async => temporary,
+  ).savePublicPdf(publicPdf, userAgent: 'TestWebView');
+
+  test('Listed public PDF redirects never carry CRM cookies', () async {
+    final client = Client([
+      Response(
+        302,
+        Headers(location: 'https://public-cdn.example.test/sample.pdf'),
+      ),
+      Response(200, Headers(mime: 'application/pdf')),
+    ]);
+    final result = await savePublic(client);
+    expect(result.mimeType, 'application/pdf');
+    expect(client.requests, hasLength(2));
+    for (final request in client.requests) {
+      expect(request.headers.value('cookie'), isNull);
+      expect(request.followRedirects, isFalse);
+    }
+    expect(await temporary.list().toList(), isEmpty);
+  });
+
+  test(
+    'Public PDF export refuses HTML, spoofed PDF and unsafe redirects',
+    () async {
+      for (final response in [
+        Response(200, Headers(mime: 'text/html')),
+        Response(
+          200,
+          Headers(mime: 'application/pdf'),
+          body: '<html>error</html>'.codeUnits,
+        ),
+        Response(
+          302,
+          Headers(location: 'http://public.example.test/sample.pdf'),
+        ),
+        Response(
+          302,
+          Headers(location: 'https://crm.justsmartchoice.com/download/private'),
+        ),
+        Response(
+          302,
+          Headers(location: 'https://dev.justsmartchoice.com/file.pdf'),
+        ),
+      ]) {
+        final client = Client([response]);
+        await expectLater(savePublic(client), throwsFormatException);
+        expect(client.urls, hasLength(1));
+        expect(exports, isEmpty);
+        expect(await temporary.list().toList(), isEmpty);
+      }
+    },
+  );
+
+  test('Arbitrary external PDFs cannot use the public Toolbox exporter', () {
+    final client = Client([]);
+    final downloader = DocumentDownload(clientFactory: () => client);
+    for (final uri in [
+      Uri.parse('https://unlisted.example.test/file.pdf'),
+      publicPdf.replace(scheme: 'http'),
+      publicPdf.replace(userInfo: 'secret'),
+    ]) {
+      expect(
+        () => downloader.savePublicPdf(uri, userAgent: 'Test'),
+        throwsFormatException,
+      );
+    }
+    expect(client.urls, isEmpty);
   });
 }

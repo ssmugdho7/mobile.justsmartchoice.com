@@ -12,6 +12,21 @@ class PreviewDestination {
     '/pricing.php': 'pricing',
     '/forms.php': 'forms',
     '/contracts.php': 'contracts',
+    '/terms.php': 'terms',
+    '/privacy.php': 'privacy',
+    '/cookie-policy.php': 'cookie-policy',
+    '/legal.php': 'legal',
+    '/sitemap.php': 'sitemap',
+    '/partners.php': 'partners',
+    '/investors.php': 'investors',
+    '/services.php': 'services',
+    '/financing.php': 'financing',
+    '/blog.php': 'blog',
+    '/faqs.php': 'faqs',
+    '/career.php': 'career',
+    '/promo_flooring.php': 'promo_flooring',
+    '/charger.php': 'charger',
+    '/login.php': 'login',
     '/calculator.php': 'calculator',
     '/concretecalc.php': 'concretecalc',
     '/concrete-calculator.php': 'concretecalc',
@@ -26,6 +41,10 @@ class PreviewDestination {
     '/calculators/paint-calculator.php': 'paint-calculator',
     '/calculators/vinyl-fence-calculator.php': 'vinyl-fence-calculator',
   };
+  static bool hasPublicPreview(Uri uri) =>
+      NavigationPolicy.isWebsite(uri) &&
+      pages.containsKey(ToolboxNavigation.resolve(uri).path);
+
   static const missingTools = ToolboxNavigation.missingResources;
   static Uri source(Uri uri) {
     uri = ToolboxNavigation.resolve(uri);

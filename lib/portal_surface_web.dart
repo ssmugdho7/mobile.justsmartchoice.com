@@ -35,13 +35,26 @@ class _PortalSurfaceState extends State<PortalSurface> {
   @override
   void didUpdateWidget(PortalSurface oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.initialUri != oldWidget.initialUri) {
+    if (widget.initialUri != oldWidget.initialUri ||
+        (!oldWidget.handleBack && widget.handleBack)) {
       _uri = widget.initialUri ?? NavigationPolicy.home;
+      // Reopening a destination from Home must start at its requested page,
+      // even after the cross-origin CRM frame navigated internally.
+      _reload++;
     }
   }
 
-  void _navigate(Uri uri) =>
-      followPreviewLink(uri, (next) => setState(() => _uri = next));
+  void _navigate(Uri uri) => followPreviewLink(
+    uri,
+    (next) => setState(() => _uri = next),
+    onUnavailable: () {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No app can open this link.')),
+        );
+      }
+    },
+  );
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(

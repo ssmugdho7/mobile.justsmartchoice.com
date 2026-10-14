@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 
 import 'navigation_policy.dart';
+import 'toolbox_resource.dart';
 
 class SavedDocument {
   const SavedDocument(this.uri, this.name, this.mimeType);
@@ -57,15 +58,49 @@ class DocumentDownload {
     return mime == 'application/pdf' ? 'CRM-document.pdf' : 'CRM-document';
   }
 
+  static bool isPublicPdf(Uri uri) =>
+      NavigationPolicy.isHttps(uri) &&
+      uri.path.toLowerCase().endsWith('.pdf') &&
+      ToolboxResource.find(uri) != null;
+
+  Future<SavedDocument> savePublicPdf(
+    Uri uri, {
+    required String userAgent,
+    String? filename,
+  }) {
+    if (!isPublicPdf(uri)) {
+      throw const FormatException(
+        'Only listed public Toolbox PDFs can be saved.',
+      );
+    }
+    return _save(
+      uri,
+      cookie: '',
+      userAgent: userAgent,
+      filename: filename,
+      publicPdf: true,
+    );
+  }
+
   Future<SavedDocument> save(
     Uri uri, {
     required String cookie,
     required String userAgent,
     String? filename,
-  }) async {
+  }) {
     if (!NavigationPolicy.isCrm(uri)) {
       throw const FormatException('Only mobile CRM documents can be saved.');
     }
+    return _save(uri, cookie: cookie, userAgent: userAgent, filename: filename);
+  }
+
+  Future<SavedDocument> _save(
+    Uri uri, {
+    required String cookie,
+    required String userAgent,
+    String? filename,
+    bool publicPdf = false,
+  }) async {
     final client = _clientFactory()
       ..connectionTimeout = const Duration(seconds: 20);
     File? file;
@@ -76,7 +111,7 @@ class DocumentDownload {
       for (var redirects = 0; redirects <= 5; redirects++) {
         final request = await client.getUrl(current);
         request.followRedirects = false;
-        request.headers.set(HttpHeaders.cookieHeader, cookie);
+        if (!publicPdf) request.headers.set(HttpHeaders.cookieHeader, cookie);
         request.headers.set(HttpHeaders.userAgentHeader, userAgent);
         response = await request.close().timeout(const Duration(seconds: 30));
         if (!response.isRedirect) break;
@@ -86,8 +121,12 @@ class DocumentDownload {
           throw const FormatException('Invalid document redirect.');
         }
         current = current.resolve(location);
-        if (!NavigationPolicy.isCrm(current)) {
-          throw const FormatException('Document left the mobile CRM.');
+        if (publicPdf
+            ? !NavigationPolicy.isHttps(current) ||
+                  NavigationPolicy.isCrm(current) ||
+                  NavigationPolicy.isOtherCrm(current)
+            : !NavigationPolicy.isCrm(current)) {
+          throw const FormatException('Document redirect is not permitted.');
         }
         response = null;
       }
@@ -96,7 +135,9 @@ class DocumentDownload {
       }
       final mime =
           response.headers.contentType?.mimeType ?? 'application/octet-stream';
-      if (mime == 'text/html' || mime == 'application/json') {
+      if ((publicPdf && mime != 'application/pdf') ||
+          mime == 'text/html' ||
+          mime == 'application/json') {
         throw const FormatException('Sign in again before downloading.');
       }
       if (response.contentLength > maxBytes) {
@@ -120,6 +161,16 @@ class DocumentDownload {
       await sink.flush();
       await sink.close();
       sink = null;
+      if (mime == 'application/pdf') {
+        final reader = await file.open();
+        try {
+          if (String.fromCharCodes(await reader.read(5)) != '%PDF-') {
+            throw const FormatException('Invalid PDF document.');
+          }
+        } finally {
+          await reader.close();
+        }
+      }
       final result = await channel.invokeMethod<String>('saveDownload', {
         'path': file.path,
         'name': name,
