@@ -37,7 +37,7 @@ The existing CRM enables client registration, GDPR and contact-removal requests 
 | `./tool/build-preview.sh --base-href /` | Release web preview built; in-app browser confirmed Privacy loads inline and missing policy recovers. |
 | Normal Android build/startup | Normal lib/main.dart APK rebuilt/validated and running with hot reload; denied microphone, notification and camera prompts still led to Home. Settings → Account privacy stays in-app and requires client login; no removal submitted. |
 | Public Toolbox link probe | All 28 card targets checked with GET; remote errors recorded below. No transactions, chat messages, uploads or bookings sent. |
-| iOS release compilation | Unsigned GitHub build passed with Xcode 26.6/iPhoneOS SDK 26.5: Runner.app (20.1 MB), including native UIKit code and CocoaPods dependencies. [Build evidence](https://github.com/ssmugdho7/mobile.justsmartchoice.com/actions/runs/38633989861) for commit f662efc. Local full Xcode remains absent. |
+| iOS release compilation | Unsigned GitHub build passed with Xcode 26.6/iPhoneOS SDK 26.5: Runner.app (20.1 MB), including native UIKit code and CocoaPods dependencies. [Build evidence](https://github.com/ssmugdho7/mobile.justsmartchoice.com/actions/runs/38635135471) for app commit 407af81. Android CI and the public preview workflow also passed for that revision. Local full Xcode remains absent. |
 
 ## Website/provider dependencies
 
@@ -47,9 +47,11 @@ The read-only Toolbox probe received HTTP 403 from Simply Business, TrustedChoic
 
 ## Apple submission gates
 
+For local iOS development/simulator testing, install full Xcode. A private owner-controlled cloud signing/TestFlight pipeline is also possible and does not require Xcode on this Mac.
+
 Do not label this app App Store ready until these gates pass:
 
-1. **Native build:** unsigned CI compilation passed; install/select full Xcode locally and meet the current SDK requirement; build a signed archive with the owner's Apple team and validate it in Organizer. `./tool/check-ios-build.sh` checks SDK ≥26 and compiles without signing. It cannot upload or produce a signed IPA.
+1. **Native build:** unsigned CI compilation passed; meet the current SDK requirement in local Xcode or a private owner-controlled signing pipeline; build a signed archive with the owner's Apple team and validate it in Organizer. `./tool/check-ios-build.sh` checks SDK ≥26 and compiles without signing. It cannot upload or produce a signed IPA.
 2. **Account access:** owner has Apple Developer/App Store Connect access and will provide it later. Configure `com.justsmartchoice.mobile`, distribution signing, App Store Connect app record and version/build privately. No Apple keys, certificates or passwords go into Git.
 3. **Physical iPhone and iPad:** test launch, safe areas/rotation/text sizing, Staff and Client login/logout/7-day remember behavior, profile menus, file selection/camera uploads, GET and POST PDF save/open/share, denied permissions, user-initiated popup links, offline/retry, and a two-person Jitsi audio/video call. Android/Chrome results do not verify these.
 4. **Deletion:** test Settings → Account privacy and real client-removal fulfilment on an approved disposable account. Client registration is enabled, so a working deletion initiation flow is required; email-only instructions or deactivation alone are insufficient.
