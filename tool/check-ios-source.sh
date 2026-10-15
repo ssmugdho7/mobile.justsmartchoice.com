@@ -8,6 +8,8 @@ swiftc -frontend -parse ios/Runner/AppDelegate.swift ios/Runner/DocumentStore.sw
 check_dir=$(mktemp -d "${TMPDIR:-/tmp}/smart-choice-ios-check.XXXXXX")
 trap 'rm -rf "$check_dir"' EXIT
 swiftc -module-cache-path "$check_dir/modules" ios/Runner/DocumentStore.swift tool/ios-document-store-checks.swift -o "$check_dir/document-checks"
+swift -module-cache-path "$check_dir/modules" tool/check-optional-analytics.swift
+python3 tool/test-ios-release.py
 "$check_dir/document-checks"
 python3 - <<'ICON_CHECK'
 import json

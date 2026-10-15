@@ -28,6 +28,21 @@ void main() {
         await tester.pump();
       }
       expect(publicPage, isNotNull);
+      // Shop is the CRM catalogue; footer/assistant checks target the public
+      // marketing website explicitly rather than changing the Shop destination.
+      final page = publicPage!;
+      publicPage = null;
+      await page.loadUrl(
+        urlRequest: URLRequest(url: WebUri('https://justsmartchoice.com/')),
+      );
+      final publicDeadline = DateTime.now().add(const Duration(seconds: 45));
+      while (publicPage == null && DateTime.now().isBefore(publicDeadline)) {
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 250)),
+        );
+        await tester.pump();
+      }
+      expect(publicPage, isNotNull);
       final result = await publicPage!.evaluateJavascript(
         source: '''JSON.stringify({
         host:location.hostname,

@@ -1,0 +1,68 @@
+name: Prepare signed iOS release
+on:
+  workflow_dispatch:
+    inputs:
+      build_number:
+        description: Unique positive App Store build number
+        required: true
+        type: string
+      upload_to_testflight:
+        description: Upload to App Store Connect after owner approval
+        required: true
+        default: false
+        type: boolean
+permissions:
+  contents: read
+concurrency:
+  group: ios-signed-release
+  cancel-in-progress: false
+jobs:
+  sign:
+    if: github.repository == 'ssmugdho7/mobile.justsmartchoice.com' && (github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/main')
+    environment: ios-release
+    runs-on: macos-26
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.6'
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Sign with existing owner distribution materials
+        env:
+          IOS_TEAM_ID: ${{ secrets.IOS_TEAM_ID }}
+          IOS_DISTRIBUTION_P12_BASE64: ${{ secrets.IOS_DISTRIBUTION_P12_BASE64 }}
+          IOS_DISTRIBUTION_PASSWORD: ${{ secrets.IOS_DISTRIBUTION_PASSWORD }}
+          IOS_PROFILE_BASE64: ${{ secrets.IOS_PROFILE_BASE64 }}
+          IOS_BUILD_NUMBER: ${{ inputs.build_number }}
+        run: ./tool/build-ios-release.sh
+      # No signed IPA or provisioning material is published as a public artifact.
+      - name: Upload only when explicitly selected and environment-approved
+        if: inputs.upload_to_testflight
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_PRIVATE_KEY_BASE64: ${{ secrets.ASC_PRIVATE_KEY_BASE64 }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          : "${ASC_KEY_ID:?Missing private ASC key ID}"
+          : "${ASC_ISSUER_ID:?Missing private ASC issuer ID}"
+          : "${ASC_PRIVATE_KEY_BASE64:?Missing private ASC key}"
+          key_dir=$(mktemp -d "$RUNNER_TEMP/smart-choice-upload.XXXXXX")
+          trap 'rm -rf "$key_dir"' EXIT
+          python3 - "$key_dir" <<'KEY'
+          import os,base64,re,sys
+          from pathlib import Path
+          key_id=os.environ['ASC_KEY_ID']
+          if not re.fullmatch(r'[A-Z0-9]{10}',key_id): raise SystemExit('Invalid ASC key ID')
+          (Path(sys.argv[1])/('AuthKey_'+key_id+'.p8')).write_bytes(base64.b64decode(os.environ['ASC_PRIVATE_KEY_BASE64'],validate=True))
+          KEY
+          shopt -s nullglob
+          packages=(build/ios/ipa/*.ipa)
+          [ "${#packages[@]}" -eq 1 ] || { echo 'Expected exactly one signed IPA.' >&2; exit 1; }
+          API_PRIVATE_KEYS_DIR="$key_dir" xcrun altool --validate-app --type ios -f "${packages[0]}" --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID"
+          API_PRIVATE_KEYS_DIR="$key_dir" xcrun altool --upload-app --type ios -f "${packages[0]}" --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID"

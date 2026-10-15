@@ -15,13 +15,13 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Employee Login'), findsOneWidget);
     expect(
-      find.text('Public page: https://justsmartchoice.com/'),
+      find.text('Public page: https://crm.justsmartchoice.com/products/client'),
       findsNothing,
     );
     await tester.tap(find.text('Shop'));
     await tester.pumpAndSettle();
     expect(
-      find.text('Public page: https://justsmartchoice.com/'),
+      find.text('Public page: https://crm.justsmartchoice.com/products/client'),
       findsOneWidget,
     );
     await tester.tap(find.byTooltip('Open navigation menu'));
@@ -44,7 +44,7 @@ void main() {
     await tester.tap(find.text('Shop'));
     await tester.pumpAndSettle();
     expect(
-      find.text('Public page: https://justsmartchoice.com/'),
+      find.text('Public page: https://crm.justsmartchoice.com/products/client'),
       findsOneWidget,
     );
     await tester.tap(find.byTooltip('Quick links'));
@@ -127,7 +127,7 @@ void main() {
     await tester.tap(find.text('Shop'));
     await tester.pumpAndSettle();
     expect(
-      find.text('Public page: https://justsmartchoice.com/'),
+      find.text('Public page: https://crm.justsmartchoice.com/products/client'),
       findsOneWidget,
     );
     await tester.binding.handlePopRoute();

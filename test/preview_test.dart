@@ -36,6 +36,20 @@ void main() {
     },
   );
 
+  testWidgets('Shop remains the live CRM product page inside the preview', (
+    tester,
+  ) async {
+    final uri = Uri.parse('https://crm.justsmartchoice.com/products/client');
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: PreviewPage(uri: uri, title: 'Shop', onNavigate: (_) {}),
+        ),
+      ),
+    );
+    expect(tester.widget<EmbeddedPage>(find.byType(EmbeddedPage)).uri, uri);
+  });
+
   test('appointment quick links open the public booking form', () {
     expect(
       QuickLink.appointment.uri.toString(),
@@ -98,7 +112,10 @@ void main() {
       findsOneWidget,
     );
     await tester.tap(find.text('Back to Shop'));
-    expect(target.toString(), 'https://justsmartchoice.com/');
+    expect(
+      target.toString(),
+      'https://crm.justsmartchoice.com/products/client',
+    );
   });
 
   testWidgets('appointment in the quick menu opens the same public form', (

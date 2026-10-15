@@ -56,7 +56,7 @@ class PreviewPage extends StatelessWidget {
               ),
               const SizedBox(height: 24),
               FilledButton.icon(
-                onPressed: () => onNavigate(NavigationPolicy.websiteHome),
+                onPressed: () => onNavigate(NavigationPolicy.shop),
                 icon: const Icon(Icons.shopping_bag_outlined),
                 label: const Text('Back to Shop'),
               ),

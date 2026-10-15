@@ -2,6 +2,9 @@ enum NavigationDecision { internal, external, blocked }
 
 class NavigationPolicy {
   static final home = Uri.parse('https://crm.justsmartchoice.com/admin');
+  static final shop = Uri.parse(
+    'https://crm.justsmartchoice.com/products/client',
+  );
   static final websiteHome = Uri.parse('https://justsmartchoice.com/');
   static final publicBooking = Uri.parse(
     'https://crm.justsmartchoice.com/appointly/appointments_public/book',

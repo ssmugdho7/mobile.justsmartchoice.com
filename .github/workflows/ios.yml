@@ -8,6 +8,11 @@ on:
       - 'assets/**'
       - 'pubspec.*'
       - 'tool/check-ios*'
+      - 'tool/check-optional-analytics.swift'
+      - 'tool/test-ios-release.py'
+      - 'tool/validate-ios-profile.py'
+      - 'tool/verify-ios-export.py'
+      - 'tool/build-ios-release.sh'
       - 'tool/ios-document-store-checks.swift'
       - '.github/workflows/ios.yml'
   pull_request:
@@ -17,6 +22,11 @@ on:
       - 'assets/**'
       - 'pubspec.*'
       - 'tool/check-ios*'
+      - 'tool/check-optional-analytics.swift'
+      - 'tool/test-ios-release.py'
+      - 'tool/validate-ios-profile.py'
+      - 'tool/verify-ios-export.py'
+      - 'tool/build-ios-release.sh'
       - 'tool/ios-document-store-checks.swift'
       - '.github/workflows/ios.yml'
   workflow_dispatch:

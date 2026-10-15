@@ -326,10 +326,10 @@ class _AppShellState extends State<AppShell> {
                       !_shopOpened
                           ? const SizedBox.shrink()
                           : widget.publicPageBuilder?.call(
-                                  NavigationPolicy.websiteHome,
+                                  NavigationPolicy.shop,
                                 ) ??
                                 PublicSiteView(
-                                  uri: NavigationPolicy.websiteHome,
+                                  uri: NavigationPolicy.shop,
                                   onPageReady: widget.onPageReady,
                                   onBrowserCreated: (controller) =>
                                       _homeController = controller,

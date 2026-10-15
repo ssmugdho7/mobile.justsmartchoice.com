@@ -13,6 +13,7 @@ import 'document_download.dart';
 import 'document_cookie.dart';
 import 'media_permissions.dart';
 import 'navigation_policy.dart';
+import 'optional_analytics.dart';
 import 'toolbox_navigation.dart';
 import 'toolbox_unavailable.dart';
 import 'quick_links.dart';
@@ -173,7 +174,7 @@ class _CrmBrowserState extends State<CrmBrowser> {
   void _info() => showAboutDialog(
     context: context,
     applicationName: 'Smart Choice Mobile',
-    applicationVersion: '0.5.4',
+    applicationVersion: '0.5.5',
     children: const [
       Text(
         'CRM: crm.justsmartchoice.com\nApp downloads: mobile.justsmartchoice.com\nUses your existing CRM account and records.',
@@ -420,6 +421,11 @@ class _CrmBrowserState extends State<CrmBrowser> {
                   // Retain server-issued sessions in the platform cookie store.
                   incognito: false,
                   sharedCookiesEnabled: true,
+                  contentBlockers: optionalAnalyticsContentBlockers(
+                    usesWebKit:
+                        defaultTargetPlatform == TargetPlatform.iOS ||
+                        defaultTargetPlatform == TargetPlatform.macOS,
+                  ),
                   useShouldOverrideUrlLoading: true,
                   useShouldInterceptRequest: true,
                   useOnDownloadStart: true,
@@ -445,6 +451,16 @@ class _CrmBrowserState extends State<CrmBrowser> {
                 // Block development CRM hosts at the request layer too, including
                 // forms, frames and scripts that contain a stale absolute URL.
                 shouldInterceptRequest: (controller, request) async {
+                  // Android's Dart interceptor takes precedence over plugin
+                  // content rules. Return locally before any tracker request.
+                  if (isOptionalAnalyticsRequest(request.url)) {
+                    return WebResourceResponse(
+                      statusCode: 204,
+                      reasonPhrase: 'No Content',
+                      contentType: 'text/plain',
+                      contentEncoding: 'utf-8',
+                    );
+                  }
                   if (NavigationPolicy.isOtherCrm(request.url)) {
                     return WebResourceResponse(
                       statusCode: 403,

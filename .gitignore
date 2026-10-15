@@ -60,3 +60,10 @@ node_modules/
 
 # Generated Kotlin incremental compiler cache.
 android/.kotlin/
+
+# Apple distribution signing material stays private.
+*.p12
+*.mobileprovision
+AuthKey_*.p8
+*.xcarchive
+*.ipa

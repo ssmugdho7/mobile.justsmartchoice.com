@@ -1,0 +1,30 @@
+name: iOS simulator navigation
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ios-simulator-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  smoke:
+    if: github.repository == 'ssmugdho7/mobile.justsmartchoice.com' && (github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/main')
+    runs-on: macos-26
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.6'
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Native public navigation without signing or account submissions
+        run: ./tool/check-ios-simulator.sh
+      - name: Home screenshot only
+        uses: actions/upload-artifact@v4
+        with:
+          name: iphone-simulator-home
+          path: dist/ios-simulator/iphone-home.png
+          if-no-files-found: error
+          retention-days: 7

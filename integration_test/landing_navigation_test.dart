@@ -80,10 +80,24 @@ void main() {
       }
 
       Future<void> readable() async {
-        final length = await web!.evaluateJavascript(
-          source: 'document.body.innerText.trim().length',
-        );
-        expect(length as num, greaterThan(100));
+        // Redirects can replace the JavaScript context after an onLoadStop
+        // callback. Wait for an actual readable document rather than casting a
+        // transient null result to num.
+        final deadline = DateTime.now().add(const Duration(seconds: 30));
+        num length = 0;
+        while (length <= 100 && DateTime.now().isBefore(deadline)) {
+          final value = await web!.evaluateJavascript(
+            source: 'document.readyState === "complete" && document.body ? document.body.innerText.trim().length : 0',
+          );
+          length = value is num ? value : 0;
+          if (length <= 100) {
+            await tester.runAsync(
+              () => Future<void>.delayed(const Duration(milliseconds: 250)),
+            );
+            await tester.pump();
+          }
+        }
+        expect(length, greaterThan(100));
         expect(find.text('Unable to load this page'), findsNothing);
         expect(tester.takeException(), isNull);
       }
@@ -94,9 +108,36 @@ void main() {
       await tester.tap(find.text('Shop'));
       await tester.pump();
       await waitFor(
-        (uri) => uri.host == 'justsmartchoice.com' && uri.path == '/',
+        (uri) =>
+            uri.host == 'crm.justsmartchoice.com' &&
+            uri.path == '/products/client',
       );
       await readable();
+      final catalogueDeadline = DateTime.now().add(const Duration(seconds: 30));
+      var productCount = 0;
+      while (productCount == 0 && DateTime.now().isBefore(catalogueDeadline)) {
+        final value = await web!.evaluateJavascript(
+          source: 'document.querySelectorAll(".sc-product-card").length',
+        );
+        productCount = value is num ? value.toInt() : 0;
+        if (productCount == 0) {
+          await tester.runAsync(
+            () => Future<void>.delayed(const Duration(milliseconds: 250)),
+          );
+          await tester.pump();
+        }
+      }
+      expect(
+        productCount,
+        greaterThan(0),
+        reason: 'The live Shop catalogue must load its products',
+      );
+      expect(
+        await web!.evaluateJavascript(
+          source: 'document.body.innerText.includes("Page expired")',
+        ),
+        false,
+      );
       for (final policy in ['/privacy.php', '/terms.php']) {
         visits.clear();
         await web!.loadUrl(
