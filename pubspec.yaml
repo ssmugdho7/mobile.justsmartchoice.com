@@ -25,6 +25,7 @@ flutter:
     - assets/pdf_download_bridge.js
     - assets/public_site_shell.js
     - assets/brand/smart-choice-logo.png
+    - assets/fonts/OFL-LibreBaskerville.txt
 
   fonts:
     - family: LandingSerif

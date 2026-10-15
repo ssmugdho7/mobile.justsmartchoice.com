@@ -21,6 +21,7 @@ This is separate from the PHP CRM repository. Existing accounts/data stay on the
 | Downloads | iOS Files save/open implementation; bounded sandbox-only files, preserved duplicates, protected storage and backup exclusion. Public listed Toolbox PDFs use a separate cookie-free download path. Invalid PDF bytes, insecure redirects and unrelated cookies are rejected. |
 | iOS popup links | WebKit has no gesture metadata; valid user windows can open while automatic JavaScript popups remain disabled. Android still requires an explicit gesture. |
 | Errors | Download failures and missing phone/email handlers give feedback; saved-file location matches the platform. |
+| Font attribution | The existing Libre Baskerville Open Font License is explicitly packaged as an asset alongside the bundled font. |
 | Branding | Opaque Smart Choice iOS icons and launch assets replace Flutter template graphics. |
 | iOS dependencies | Native CocoaPods installation/configuration and camera/microphone build flags added. |
 
@@ -34,12 +35,16 @@ The existing CRM enables client registration, GDPR and contact-removal requests 
 | `./tool/check.sh` | Formatter/analyzer clean; 70 Flutter tests and 33 JavaScript checks passed. |
 | `flutter test --platform chrome test/embedded_page_web_test.dart` | Two real-DOM permission-policy checks passed; no media started. |
 | `./tool/check-ios-source.sh` | 28 Foundation/macOS document-storage checks, native macOS WebKit analytics rule compilation/removal, five signing/profile/export unittest methods (including 12 profile rejection cases), Swift parse, Ruby/Podfile/plist/project lint, 19 opaque icon sizes passed. These are not iPhone tests. |
-| Android `landing_navigation_test.dart` | Shop → Privacy/Terms → Toolbox → Contact → Appointment/provider lookup → Client → Employee → About; passed without submissions. |
+| Android `landing_navigation_test.dart` | Updated Shop catalogue must contain products and no expired-page error; Shop → Privacy/Terms → Toolbox → Contact → Appointment/provider lookup → Client → Employee → About; passed without submissions. |
+| Android `optional_analytics_test.dart` | Three inert, credential-free analytics-origin fixture requests returned the app interceptor’s local 204 response; passed on emulator. |
+| Signing preparation checks | Five Python unittest methods passed, covering valid/rejected profiles and missing/empty/duplicate/wrong-build exports; shell syntax and missing-input early refusal passed. Actual signing remains untested. |
 | Android `toolbox_navigation_test.dart` | Calculator result, Toolbox return, Progressive inside app and missing-document recovery passed. |
 | `./tool/build-preview.sh --base-href /` | Release web preview built; in-app browser confirmed Privacy loads inline and missing policy recovers. |
-| Normal Android build/startup | Normal lib/main.dart APK rebuilt/validated and running with hot reload; denied microphone, notification and camera prompts still led to Home. Settings → Account privacy stays in-app and requires client login; no removal submitted. |
+| Published Shop preview | Build bab0010 served at `https://mobile.justsmartchoice.com/preview/`; Shop iframe stayed at `/products/client`, rendered 190 product cards, and had zero expired-page/product-loading errors. Localhost cross-site cookie limits do not represent this same-site deployment. |
+| Normal Android build/startup | Normal 0.5.5+10 lib/main.dart APK rebuilt/validated and running with hot reload; the final normal app showed all six Home actions after declining all startup prompts, and its Shop screenshot showed 190 services. denied microphone, notification and camera prompts still led to Home. Settings → Account privacy stays in-app and requires client login; no removal submitted. |
 | Public Toolbox link probe | All 28 card targets checked with GET; remote errors recorded below. No transactions, chat messages, uploads or bookings sent. |
-| iOS release compilation | Unsigned GitHub build passed with Xcode 26.6/iPhoneOS SDK 26.5: Runner.app (20.1 MB), including native UIKit code and CocoaPods dependencies. [Build evidence](https://github.com/ssmugdho7/mobile.justsmartchoice.com/actions/runs/38635135471) for app commit 407af81. Android CI and the public preview workflow also passed for that revision. Local full Xcode remains absent. |
+| iOS simulator navigation | [Manual iOS 26.5 simulator run](https://github.com/ssmugdho7/mobile.justsmartchoice.com/actions/runs/38669568721) passed the six-menu journey, actual Shop products, Privacy/Terms, public provider lookup and About for app code bab0010. It rebuilt the normal lib/main.dart simulator app and captured Home. No Apple membership, login, order, payment or booking submission was used. This is not physical-device validation. |
+| iOS release compilation | Latest unsigned [development build](https://github.com/ssmugdho7/mobile.justsmartchoice.com/actions/runs/38669536472) passed for bab0010, including native WebKit rule compilation and five profile/export unittest methods. Previous unsigned GitHub build passed with Xcode 26.6/iPhoneOS SDK 26.5: Runner.app (20.1 MB), including native UIKit code and CocoaPods dependencies. [Build evidence](https://github.com/ssmugdho7/mobile.justsmartchoice.com/actions/runs/38635135471) for app commit 407af81. Android CI and the public preview workflow also passed for that revision. Local full Xcode remains absent. |
 
 ## Website/provider dependencies
 
@@ -66,7 +71,7 @@ Apple references: [App Review Guidelines](https://developer.apple.com/app-store/
 
 ## Signing and store preparation
 
-[Private signing setup](apple-signing-setup.md), [App Store listing draft](app-store-listing.md) and [App Privacy worksheet](app-store-privacy.md) are prepared. The signed workflow is manual-only, uses existing owner credentials through a protected GitHub environment, and defaults TestFlight upload to false. No signing run, Apple account mutation or upload has been performed. A manual simulator workflow uses preinstalled iOS runtimes and no signing account; its results must be recorded after execution.
+[Private signing setup](apple-signing-setup.md), [App Store listing draft](app-store-listing.md) and [App Privacy worksheet](app-store-privacy.md) are prepared. The signed workflow is manual-only, uses existing owner credentials through a protected GitHub environment, and defaults TestFlight upload to false. No signing run, Apple account mutation or upload has been performed. The manual simulator workflow passed on preinstalled iOS 26.5 without a signing account (see executed checks). A later packaging-only change adds the existing font license asset; no navigation code changed.
 
 ## Reproduce and release
 
