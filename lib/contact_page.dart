@@ -22,7 +22,8 @@ class ContactPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => SafeArea(
-    child: Center(
+    child: Align(
+      alignment: Alignment.topCenter,
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: ConstrainedBox(
