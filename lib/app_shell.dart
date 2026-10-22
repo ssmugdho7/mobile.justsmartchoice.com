@@ -12,6 +12,7 @@ import 'navigation_policy.dart';
 import 'quick_links.dart';
 import 'landing_page.dart';
 import 'launch_intro.dart';
+import 'contact_page.dart';
 
 class AppShell extends StatefulWidget {
   const AppShell({
@@ -46,7 +47,7 @@ class _AppShellState extends State<AppShell> {
       return;
     }
     if (!mounted) return;
-    if (_page == 1 || _page == 0) {
+    if (_page == 1 || _page == 0 || _page == 4) {
       _select(3);
       return;
     }
@@ -98,6 +99,10 @@ class _AppShellState extends State<AppShell> {
   });
   Future<void> _openPortal(String path) async {
     final uri = NavigationPolicy.home.resolve(path);
+    if (NavigationPolicy.isWebsite(uri) && uri.path == '/contacts.php') {
+      _select(4);
+      return;
+    }
     if (_controller != null) {
       await _controller!.loadUrl(
         urlRequest: URLRequest(url: WebUri(uri.toString())),
@@ -280,20 +285,22 @@ class _AppShellState extends State<AppShell> {
                   backgroundColor: Colors.black,
                   foregroundColor: Colors.white,
                   title: Text(
-                    _page == 0 ? 'Shop' : 'About',
+                    _page == 0 ? 'Shop' : (_page == 4 ? 'Contact Us' : 'About'),
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  leading: _page == 1
+                  leading: _page == 1 || _page == 4
                       ? IconButton(
                           tooltip: 'Back to Home',
                           icon: const Icon(Icons.chevron_left),
                           onPressed: () => _select(3),
                         )
                       : null,
-                  actions: [QuickLinksMenu(onSelected: _openQuickLink)],
+                  actions: _page == 4
+                      ? null
+                      : [QuickLinksMenu(onSelected: _openQuickLink)],
                 ),
           drawer: _page == 0 ? _drawer() : null,
           body: AnimatedSwitcher(
@@ -366,15 +373,12 @@ class _AppShellState extends State<AppShell> {
                         onAppointment: () => _openPortal(
                           NavigationPolicy.publicBooking.toString(),
                         ),
-                        onContact: () => _openPortal(
-                          NavigationPolicy.websiteHome
-                              .resolve('/contacts.php')
-                              .toString(),
-                        ),
+                        onContact: () => _select(4),
                         onToolbox: () => _openQuickLink(QuickLink.toolbox),
                         onShop: () => _select(0),
                         onSettings: _settings,
                       ),
+                      const ContactPage(),
                     ],
                   ),
           ),

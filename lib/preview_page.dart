@@ -5,6 +5,7 @@ import 'navigation_policy.dart';
 import 'preview_destination.dart';
 import 'external_resource_page.dart';
 import 'toolbox_unavailable.dart';
+import 'contact_page.dart';
 
 /// Live CRM pages retain their own authentication. Public website snapshots
 /// avoid weakening the website's frame restrictions for the browser preview.
@@ -21,6 +22,9 @@ class PreviewPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (NavigationPolicy.isWebsite(uri) && uri.path == '/contacts.php') {
+      return const ContactPage();
+    }
     if (NavigationPolicy.isHttps(uri) &&
         !NavigationPolicy.isAppPage(uri) &&
         uri.host != NavigationPolicy.meetingHost) {
@@ -67,14 +71,6 @@ class PreviewPage extends StatelessWidget {
     }
     return Column(
       children: [
-        if (NavigationPolicy.isWebsite(uri) && uri.path == '/contacts.php')
-          const Padding(
-            padding: EdgeInsets.all(12),
-            child: Text(
-              'Contact details preview. The contact form is available in the installed app.',
-              textAlign: TextAlign.center,
-            ),
-          ),
         Expanded(
           child: EmbeddedPage(
             uri: PreviewDestination.source(uri),

@@ -6,6 +6,7 @@ import 'package:smart_choice_mobile/preview_page.dart';
 import 'package:smart_choice_mobile/preview_destination.dart';
 import 'package:smart_choice_mobile/quick_links.dart';
 import 'package:smart_choice_mobile/preview_navigation.dart';
+import 'package:smart_choice_mobile/contact_page.dart';
 
 void main() {
   test(
@@ -221,10 +222,6 @@ void main() {
       'https://crm.justsmartchoice.com/appointly/appointments_public/book',
       'https://crm.justsmartchoice.com/appointly/appointments_public/book',
     ),
-    'Contact Us': (
-      'https://justsmartchoice.com/contacts.php',
-      'public-pages/contact.html?v=local',
-    ),
     'Toolbox': (
       'https://justsmartchoice.com/toolbox.php',
       'public-pages/toolbox.html?v=local',
@@ -245,4 +242,20 @@ void main() {
       expect(find.textContaining('new tab'), findsNothing);
     });
   }
+  testWidgets(
+    'Contact preview shows local details without an embedded website',
+    (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: PortalSurface(
+            initialUri: Uri.parse('https://justsmartchoice.com/contacts.php'),
+          ),
+        ),
+      );
+      expect(find.byType(ContactPage), findsOneWidget);
+      expect(find.byType(EmbeddedPage), findsNothing);
+      expect(find.text('+1 7277553786'), findsOneWidget);
+      expect(find.text('admin@justsmartchoice.com'), findsOneWidget);
+    },
+  );
 }

@@ -29,6 +29,7 @@ an Android 10+ ARM64 **debug-signed testing build**, not a Play Store release.
 
 ## Behavior and safeguards
 
+- Contact Us opens a simple local screen in the app and browser preview, with only the tappable phone `+1 7277553786` and email `admin@justsmartchoice.com`.
 - A short centered logo intro leads to the six-button Home menu: Employee Login, Client Login, Book an Appointment, Contact Us, Toolbox and Shop. Settings opens Dark Mode and About. Shop opens the live CRM catalogue at `https://crm.justsmartchoice.com/products/client`; it is not loaded before selection. Returning Home does not replay the intro. Website/CRM navigation preserves the CRM WebView session. Reduced-motion users skip the intro and transition.
 - CRM-colored toolbar: back/close, refresh, staff/customer portal switch and info.
 - Server login, cookies, CSRF, roles and ownership checks remain authoritative.
