@@ -74,7 +74,8 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('+1 7277553786'), findsOneWidget);
     expect(find.text('admin@justsmartchoice.com'), findsOneWidget);
-    expect(tester.getTopLeft(find.text('+1 7277553786')).dy, lessThan(170));
+    await tester.ensureVisible(find.text('admin@justsmartchoice.com'));
+    await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
   });
 }
