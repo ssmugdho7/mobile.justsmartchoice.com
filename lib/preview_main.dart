@@ -26,25 +26,40 @@ class PreviewApp extends StatelessWidget {
     theme: smartChoiceTheme(),
     home: Scaffold(
       body: SafeArea(
-        child: Column(
-          children: [
-            const Padding(
-              padding: EdgeInsets.all(12),
-              child: Text(
-                'Mobile preview · Connected to live CRM\nBuild ${String.fromEnvironment('PREVIEW_COMMIT', defaultValue: 'local')} · ${String.fromEnvironment('PREVIEW_DATE', defaultValue: 'development')}',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 12, height: 1.6),
-              ),
-            ),
-            Expanded(
-              child: Center(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final framed = constraints.maxWidth >= 600;
+            return Center(
+              child: Padding(
+                padding: EdgeInsets.all(framed ? 16 : 0),
                 child: ConstrainedBox(
-                  constraints: BoxConstraints(maxWidth: 430),
-                  child: AppShell(),
+                  constraints: BoxConstraints(
+                    maxWidth: 430,
+                    maxHeight: framed ? 900 : double.infinity,
+                  ),
+                  child: Column(
+                    children: [
+                      if (framed)
+                        const Padding(
+                          padding: EdgeInsets.only(bottom: 12),
+                          child: Text(
+                            'Mobile preview · Connected to live CRM\nBuild ${String.fromEnvironment('PREVIEW_COMMIT', defaultValue: 'local')} · ${String.fromEnvironment('PREVIEW_DATE', defaultValue: 'development')}',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(fontSize: 11, height: 1.5),
+                          ),
+                        ),
+                      Expanded(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(framed ? 24 : 0),
+                          child: const AppShell(),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            );
+          },
         ),
       ),
     ),

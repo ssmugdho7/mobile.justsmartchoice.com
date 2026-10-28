@@ -282,8 +282,6 @@ class _AppShellState extends State<AppShell> {
               : AppBar(
                   leadingWidth: 48,
                   titleSpacing: 0,
-                  backgroundColor: Colors.black,
-                  foregroundColor: Colors.white,
                   title: Text(
                     _page == 0 ? 'Shop' : (_page == 4 ? 'Contact Us' : 'About'),
                     style: const TextStyle(

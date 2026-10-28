@@ -139,30 +139,30 @@ class LandingPage extends StatelessWidget {
       child: LayoutBuilder(
         builder: (context, constraints) {
           final scale = math
-              .min(constraints.maxWidth / 290, constraints.maxHeight / 569)
-              .clamp(.9, 1.5);
+              .min(constraints.maxWidth / 375, constraints.maxHeight / 700)
+              .clamp(.9, 1.1);
           return Stack(
             fit: StackFit.expand,
             children: [
               SingleChildScrollView(
                 child: Center(
                   child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 430),
+                    constraints: const BoxConstraints(maxWidth: 400),
                     child: Padding(
                       padding: EdgeInsets.fromLTRB(
-                        28 * scale,
-                        40 * scale,
-                        28 * scale,
-                        22 * scale,
+                        24 * scale,
+                        56 * scale,
+                        24 * scale,
+                        24 * scale,
                       ),
                       child: Column(
                         children: [
                           SizedBox(
-                            width: 180 * scale,
-                            height: 93 * scale,
+                            width: 206 * scale,
+                            height: 106 * scale,
                             child: const FittedBox(child: LandingBrand()),
                           ),
-                          SizedBox(height: 42 * scale),
+                          SizedBox(height: 28 * scale),
                           for (final (index, action)
                               in <(String, VoidCallback)>[
                                 ('Employee Login', onEmployee),
@@ -174,7 +174,7 @@ class LandingPage extends StatelessWidget {
                               ].indexed)
                             Padding(
                               padding: EdgeInsets.only(
-                                bottom: index == 5 ? 0 : 12 * scale,
+                                bottom: index == 5 ? 0 : 12,
                               ),
                               child: DecoratedBox(
                                 decoration: BoxDecoration(
@@ -196,13 +196,10 @@ class LandingPage extends StatelessWidget {
                                 child: ElevatedButton(
                                   onPressed: action.$2,
                                   style: ElevatedButton.styleFrom(
-                                    minimumSize: Size(
-                                      double.infinity,
-                                      52 * scale,
-                                    ),
+                                    minimumSize: Size(double.infinity, 52),
                                     padding: EdgeInsets.symmetric(
                                       horizontal: 14 * scale,
-                                      vertical: 16 * scale,
+                                      vertical: 14,
                                     ),
                                     backgroundColor: Colors.transparent,
                                     shadowColor: Colors.transparent,
@@ -211,7 +208,7 @@ class LandingPage extends StatelessWidget {
                                       borderRadius: BorderRadius.circular(9),
                                     ),
                                     textStyle: TextStyle(
-                                      fontSize: 16 * scale,
+                                      fontSize: 16,
                                       fontWeight: FontWeight.w700,
                                     ),
                                   ),
