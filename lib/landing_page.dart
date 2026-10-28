@@ -2,7 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-/// Rebuilt as scalable artwork so the supplied menu stays sharp on any device.
+/// Shared brand asset used by the home screen, opening screen and drawer.
 class LandingBrand extends StatelessWidget {
   const LandingBrand({super.key});
   @override
@@ -10,74 +10,14 @@ class LandingBrand extends StatelessWidget {
     label: 'Smart Choice Contractors',
     image: true,
     child: ExcludeSemantics(
-      child: SizedBox(
-        width: 206,
-        height: 106,
-        child: Column(
-          children: [
-            SizedBox(
-              width: 184,
-              height: 47,
-              child: CustomPaint(painter: _Roof()),
-            ),
-            const FittedBox(
-              child: Text(
-                'Smart Choice',
-                style: TextStyle(
-                  fontFamily: 'LandingSerif',
-                  fontWeight: FontWeight.bold,
-                  fontSize: 34,
-                  height: 1,
-                  color: Color(0xffdddddd),
-                ),
-              ),
-            ),
-            const Row(
-              children: [
-                Expanded(
-                  child: Divider(color: Color(0xff008b75), thickness: 2),
-                ),
-                SizedBox(width: 8),
-                Text(
-                  'CONTRACTORS',
-                  style: TextStyle(
-                    fontFamily: 'LandingSerif',
-                    fontSize: 11,
-                    color: Color(0xffdddddd),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
+      child: Image.asset(
+        'assets/brand/smart-choice-logo.png',
+        width: 240,
+        height: 115,
+        fit: BoxFit.contain,
       ),
     ),
   );
-}
-
-class _Roof extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    canvas.scale(size.width / 184, size.height / 47);
-    final paint = Paint()..color = const Color(0xff008b75);
-    canvas.drawPath(
-      Path()
-        ..moveTo(5, 44)
-        ..lineTo(67, 1)
-        ..lineTo(82, 6)
-        ..lineTo(82, 21)
-        ..lineTo(116, 9)
-        ..lineTo(177, 43)
-        ..lineTo(116, 17)
-        ..lineTo(61, 43)
-        ..lineTo(61, 22)
-        ..close(),
-      paint,
-    );
-  }
-
-  @override
-  bool shouldRepaint(_Roof oldDelegate) => false;
 }
 
 class LandingBackground extends StatelessWidget {
@@ -158,8 +98,8 @@ class LandingPage extends StatelessWidget {
                       child: Column(
                         children: [
                           SizedBox(
-                            width: 206 * scale,
-                            height: 106 * scale,
+                            width: 240 * scale,
+                            height: 115 * scale,
                             child: const FittedBox(child: LandingBrand()),
                           ),
                           SizedBox(height: 28 * scale),
