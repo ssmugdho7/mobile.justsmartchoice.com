@@ -113,6 +113,16 @@ void main() {
       ),
     );
     expect(find.byType(LaunchIntro), findsOneWidget);
+    final introLogo = tester.widget<Image>(
+      find.descendant(
+        of: find.byType(LaunchIntro),
+        matching: find.byType(Image),
+      ),
+    );
+    expect(
+      (introLogo.image as AssetImage).assetName,
+      'assets/brand/smart-choice-launch-logo.png',
+    );
     expect(find.text('Employee Login'), findsNothing);
     expect(builds, 0);
     await tester.pumpAndSettle();

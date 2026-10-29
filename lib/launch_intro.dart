@@ -71,16 +71,12 @@ class _LaunchIntroState extends State<LaunchIntro>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                width: 94,
-                height: 94,
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(14),
-                ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 28),
                 child: Image.asset(
-                  'assets/brand/smart-choice-logo.png',
+                  'assets/brand/smart-choice-launch-logo.png',
+                  width: 320,
+                  height: 156,
                   fit: BoxFit.contain,
                 ),
               ),
