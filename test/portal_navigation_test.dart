@@ -35,6 +35,34 @@ void main() {
     await tester.pumpAndSettle();
     frame = tester.widget<EmbeddedPage>(find.byType(EmbeddedPage));
     expect(frame.uri.path, '/admin');
+    expect(
+      frame.navigationRevision,
+      1,
+      reason: 'Back must reload the iframe even when its original src was the dashboard',
+    );
+    expect(exited, false);
+    expect(find.text('Leave this portal?'), findsNothing);
+  });
+  testWidgets('Back closes New To Do modal before leaving the dashboard', (
+    tester,
+  ) async {
+    var closed = false, exited = false;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: PortalSurface(initialUri: dashboard, onHome: () => exited = true),
+      ),
+    );
+    final controller = tester
+        .widget<EmbeddedPage>(find.byType(EmbeddedPage))
+        .portalController!;
+    controller.overlayOpen = true;
+    controller.closeOverlay = () {
+      closed = true;
+      controller.overlayOpen = false;
+    };
+    await tester.tap(find.byTooltip('Back'));
+    await tester.pumpAndSettle();
+    expect(closed, true);
     expect(exited, false);
     expect(find.text('Leave this portal?'), findsNothing);
   });

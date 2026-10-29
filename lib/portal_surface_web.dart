@@ -34,6 +34,8 @@ class _PortalSurfaceState extends State<PortalSurface> {
   late Uri _uri = widget.initialUri ?? NavigationPolicy.home;
   late PortalHistory _history = PortalHistory(_uri);
   int _reload = 0;
+  int _navigationRevision = 0;
+  final _frameController = PortalFrameController();
   bool _leaving = false;
   bool _reportedLocation = false;
   @override
@@ -59,6 +61,7 @@ class _PortalSurfaceState extends State<PortalSurface> {
     await followPreviewLink(
       uri,
       (next) => setState(() {
+        _navigationRevision++;
         _history.visit(next);
         _uri = next;
       }),
@@ -74,6 +77,10 @@ class _PortalSurfaceState extends State<PortalSurface> {
 
   Future<void> _back() async {
     if (_leaving) return;
+    if (_frameController.overlayOpen) {
+      _frameController.closeOverlay?.call();
+      return;
+    }
     final previous = _history.previous;
     if (previous != null) {
       if (isUserPortal(_history.current) &&
@@ -83,6 +90,7 @@ class _PortalSurfaceState extends State<PortalSurface> {
       }
       if (!mounted) return;
       setState(() {
+        _navigationRevision++;
         _history.visit(previous);
         _uri = previous;
       });
@@ -138,6 +146,8 @@ class _PortalSurfaceState extends State<PortalSurface> {
         uri: _uri,
         title: QuickLink.labelFor(_uri),
         onNavigate: _navigate,
+        navigationRevision: _navigationRevision,
+        portalController: _frameController,
         onLocationChanged: (uri) {
           if (!_reportedLocation) {
             _history = PortalHistory(uri);

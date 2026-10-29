@@ -118,6 +118,11 @@ class _AppShellState extends State<AppShell> {
   });
   Future<void> _openPortal(String path) async {
     final uri = NavigationPolicy.home.resolve(path);
+    if ((_page == 2 || (_page == 0 && isUserPortal(_shopLocation))) &&
+        !isUserPortal(uri) &&
+        !await confirmLeavePortal(context)) {
+      return;
+    }
     if (NavigationPolicy.isWebsite(uri) && uri.path == '/contacts.php') {
       _select(4);
       return;

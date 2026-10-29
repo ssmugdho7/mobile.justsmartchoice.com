@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:web/web.dart' as web;
 
 import 'navigation_policy.dart';
+import 'portal_navigation.dart';
 
 void applyEmbeddedMediaPermissions(web.HTMLIFrameElement frame, Uri uri) {
   if (NavigationPolicy.canUseMedia(uri)) {
@@ -27,11 +28,15 @@ class EmbeddedPage extends StatefulWidget {
     required this.title,
     this.onNavigate,
     this.onLocationChanged,
+    this.navigationRevision = 0,
+    this.portalController,
   });
   final Uri uri;
   final String title;
   final ValueChanged<Uri>? onNavigate;
   final ValueChanged<Uri>? onLocationChanged;
+  final int navigationRevision;
+  final PortalFrameController? portalController;
   @override
   State<EmbeddedPage> createState() => _EmbeddedPageState();
 }
@@ -67,6 +72,11 @@ class _EmbeddedPageState extends State<EmbeddedPage> {
         ..style.height = '100%';
       applyEmbeddedMediaPermissions(frame, widget.uri);
       _frame = frame;
+      widget.portalController?.closeOverlay = () =>
+          frame.contentWindow?.postMessage(
+            {'type': 'sc-mobile-portal-close-overlay'}.jsify(),
+            NavigationPolicy.home.origin.toJS,
+          );
       frame.addEventListener(
         'load',
         ((web.Event _) {
@@ -98,6 +108,7 @@ class _EmbeddedPageState extends State<EmbeddedPage> {
           NavigationPolicy.isCrm(widget.uri)) {
         final uri = Uri.tryParse(data['url'] as String);
         if (uri != null && NavigationPolicy.isCrm(uri)) {
+          widget.portalController?.overlayOpen = data['overlay'] == true;
           widget.onLocationChanged?.call(uri);
         }
         return;
@@ -119,7 +130,9 @@ class _EmbeddedPageState extends State<EmbeddedPage> {
   @override
   void didUpdateWidget(EmbeddedPage oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.uri != widget.uri && _frame != null) {
+    if ((oldWidget.uri != widget.uri ||
+            oldWidget.navigationRevision != widget.navigationRevision) &&
+        _frame != null) {
       applyEmbeddedMediaPermissions(_frame!, widget.uri);
       _frame!.src = _source();
     }
@@ -128,6 +141,8 @@ class _EmbeddedPageState extends State<EmbeddedPage> {
 
   @override
   void dispose() {
+    widget.portalController?.closeOverlay = null;
+    widget.portalController?.overlayOpen = false;
     web.window.removeEventListener('message', _listener);
     _frame?.src = 'about:blank';
     super.dispose();

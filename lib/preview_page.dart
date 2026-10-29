@@ -6,6 +6,7 @@ import 'preview_destination.dart';
 import 'external_resource_page.dart';
 import 'toolbox_unavailable.dart';
 import 'contact_page.dart';
+import 'portal_navigation.dart';
 
 /// Live CRM pages retain their own authentication. Public website snapshots
 /// avoid weakening the website's frame restrictions for the browser preview.
@@ -16,11 +17,15 @@ class PreviewPage extends StatelessWidget {
     required this.title,
     required this.onNavigate,
     this.onLocationChanged,
+    this.navigationRevision = 0,
+    this.portalController,
   });
   final Uri uri;
   final String title;
   final ValueChanged<Uri> onNavigate;
   final ValueChanged<Uri>? onLocationChanged;
+  final int navigationRevision;
+  final PortalFrameController? portalController;
 
   @override
   Widget build(BuildContext context) {
@@ -79,6 +84,8 @@ class PreviewPage extends StatelessWidget {
             title: title,
             onNavigate: onNavigate,
             onLocationChanged: onLocationChanged,
+            navigationRevision: navigationRevision,
+            portalController: portalController,
           ),
         ),
       ],

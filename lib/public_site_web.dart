@@ -27,10 +27,16 @@ class _PublicSiteViewState extends State<PublicSiteView> {
   late Uri _uri = widget.uri;
   late PortalHistory _history = PortalHistory(_uri);
   bool _reportedLocation = false;
+  int _navigationRevision = 0;
+  final _frameController = PortalFrameController();
   @override
   void initState() {
     super.initState();
     widget.backController?.onBack = () async {
+      if (_frameController.overlayOpen) {
+        _frameController.closeOverlay?.call();
+        return true;
+      }
       final previous = _history.previous;
       if (previous == null) return false;
       if (isUserPortal(_history.current) &&
@@ -40,6 +46,7 @@ class _PublicSiteViewState extends State<PublicSiteView> {
       }
       if (!mounted) return true;
       setState(() {
+        _navigationRevision++;
         _history.visit(previous);
         _uri = previous;
       });
@@ -57,6 +64,8 @@ class _PublicSiteViewState extends State<PublicSiteView> {
   Widget build(BuildContext context) => PreviewPage(
     uri: _uri,
     title: 'Smart Choice public page',
+    navigationRevision: _navigationRevision,
+    portalController: _frameController,
     onLocationChanged: (uri) {
       if (!_reportedLocation) {
         _history = PortalHistory(uri);
@@ -69,6 +78,7 @@ class _PublicSiteViewState extends State<PublicSiteView> {
     onNavigate: (uri) => followPreviewLink(
       uri,
       (next) => setState(() {
+        _navigationRevision++;
         _history.visit(next);
         _uri = next;
       }),

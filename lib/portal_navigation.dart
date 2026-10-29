@@ -31,6 +31,11 @@ class PortalBackController {
   Future<bool> goBack() async => await onBack?.call() ?? false;
 }
 
+class PortalFrameController {
+  bool overlayOpen = false;
+  VoidCallback? closeOverlay;
+}
+
 bool isUserPortal(Uri uri) =>
     NavigationPolicy.isCrm(uri) &&
     !uri.path.startsWith('/appointly/appointments_public');

@@ -198,6 +198,20 @@ class _CrmBrowserState extends State<CrmBrowser> {
   }
 
   Future<void> _performBack() async {
+    if (NavigationPolicy.isCrm(_current)) {
+      final closed = await _web?.evaluateJavascript(
+        source: '''
+        (function(){
+          var modal=document.querySelector('.modal.in,.modal.show');
+          if(!modal)return false;
+          if(window.jQuery&&window.jQuery.fn.modal){window.jQuery(modal).modal('hide');return true;}
+          var close=modal.querySelector('[data-dismiss="modal"]');
+          if(close){close.click();return true;}return false;
+        })()
+      ''',
+      );
+      if (closed == true || closed == 'true') return;
+    }
     if (await _web?.canGoBack() ?? false) {
       final history = await _web?.getCopyBackForwardList();
       final index = history?.currentIndex;
