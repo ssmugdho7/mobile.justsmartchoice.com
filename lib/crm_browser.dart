@@ -202,8 +202,9 @@ class _CrmBrowserState extends State<CrmBrowser> {
       final closed = await _web?.evaluateJavascript(
         source: '''
         (function(){
-          var modal=document.querySelector('.modal.in,.modal.show');
+          var modal=document.querySelector('.modal.in,.modal.show,dialog[open]');
           if(!modal)return false;
+          if(modal.tagName==='DIALOG'){modal.close();return true;}
           if(window.jQuery&&window.jQuery.fn.modal){window.jQuery(modal).modal('hide');return true;}
           var close=modal.querySelector('[data-dismiss="modal"]');
           if(close){close.click();return true;}return false;
