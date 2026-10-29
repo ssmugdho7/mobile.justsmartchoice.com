@@ -140,7 +140,7 @@ void main() {
   });
 
   testWidgets(
-    'customer portal renders inline and returns Home without an external CTA',
+    'customer portal renders inline and confirms before returning Home',
     (tester) async {
       var returned = false;
       await tester.pumpWidget(
@@ -156,7 +156,11 @@ void main() {
         tester.widget<EmbeddedPage>(find.byType(EmbeddedPage)).uri.toString(),
         'https://crm.justsmartchoice.com/clients',
       );
-      await tester.tap(find.byTooltip('Back to Home'));
+      await tester.tap(find.byTooltip('Back'));
+      await tester.pumpAndSettle();
+      expect(returned, isFalse);
+      await tester.tap(find.text('Leave portal'));
+      await tester.pumpAndSettle();
       expect(returned, isTrue);
     },
   );

@@ -26,10 +26,12 @@ class EmbeddedPage extends StatefulWidget {
     required this.uri,
     required this.title,
     this.onNavigate,
+    this.onLocationChanged,
   });
   final Uri uri;
   final String title;
   final ValueChanged<Uri>? onNavigate;
+  final ValueChanged<Uri>? onLocationChanged;
   @override
   State<EmbeddedPage> createState() => _EmbeddedPageState();
 }
@@ -53,6 +55,7 @@ class _EmbeddedPageState extends State<EmbeddedPage> {
       final frame = web.HTMLIFrameElement()
         ..src = _source()
         ..title = widget.title
+        ..name = 'sc-mobile-$_viewType'
         // No popups or top navigation: links cannot eject the mobile interface.
         // CRM retains its own HTTPS, sessions, CAPTCHA, CSRF and permissions.
         ..setAttribute(
@@ -64,6 +67,17 @@ class _EmbeddedPageState extends State<EmbeddedPage> {
         ..style.height = '100%';
       applyEmbeddedMediaPermissions(frame, widget.uri);
       _frame = frame;
+      frame.addEventListener(
+        'load',
+        ((web.Event _) {
+          if (NavigationPolicy.isCrm(widget.uri)) {
+            frame.contentWindow?.postMessage(
+              {'type': 'sc-mobile-portal-hello'}.jsify(),
+              NavigationPolicy.home.origin.toJS,
+            );
+          }
+        }).toJS,
+      );
       return frame;
     });
     _listener = ((web.MessageEvent event) {
@@ -78,6 +92,16 @@ class _EmbeddedPageState extends State<EmbeddedPage> {
       final expected = Uri.parse(_source()).origin;
       if (event.origin != expected) return;
       final data = event.data.dartify();
+      if (data is Map &&
+          data['type'] == 'sc-mobile-portal-location' &&
+          data['url'] is String &&
+          NavigationPolicy.isCrm(widget.uri)) {
+        final uri = Uri.tryParse(data['url'] as String);
+        if (uri != null && NavigationPolicy.isCrm(uri)) {
+          widget.onLocationChanged?.call(uri);
+        }
+        return;
+      }
       if (data is! Map ||
           data['type'] != 'sc-mobile-navigate' ||
           data['url'] is! String) {

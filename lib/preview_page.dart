@@ -15,10 +15,12 @@ class PreviewPage extends StatelessWidget {
     required this.uri,
     required this.title,
     required this.onNavigate,
+    this.onLocationChanged,
   });
   final Uri uri;
   final String title;
   final ValueChanged<Uri> onNavigate;
+  final ValueChanged<Uri>? onLocationChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -76,6 +78,7 @@ class PreviewPage extends StatelessWidget {
             uri: PreviewDestination.source(uri),
             title: title,
             onNavigate: onNavigate,
+            onLocationChanged: onLocationChanged,
           ),
         ),
       ],

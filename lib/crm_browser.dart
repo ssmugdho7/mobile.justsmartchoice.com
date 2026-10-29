@@ -18,6 +18,7 @@ import 'toolbox_navigation.dart';
 import 'toolbox_unavailable.dart';
 import 'quick_links.dart';
 import 'site_unavailable.dart';
+import 'portal_navigation.dart';
 
 class CrmBrowser extends StatefulWidget {
   const CrmBrowser({
@@ -31,10 +32,12 @@ class CrmBrowser extends StatefulWidget {
     this.onBrowserCreated,
     this.showAppBar = true,
     this.handleBack = true,
+    this.onLocationChanged,
   });
   final int? windowId;
   final bool showAppBar;
   final bool handleBack;
+  final ValueChanged<Uri>? onLocationChanged;
   final Widget? navigationDrawer;
   final VoidCallback? onAbout;
   final VoidCallback? onHome;
@@ -59,6 +62,7 @@ class _CrmBrowserState extends State<CrmBrowser> {
     Future.wait([
       rootBundle.loadString('assets/pdf_download_bridge.js'),
       rootBundle.loadString('assets/public_site_shell.js'),
+      rootBundle.loadString('assets/staff_portal_mobile.js'),
     ]).then((sources) {
       if (mounted) {
         final pdfSource = sources[0]
@@ -67,7 +71,7 @@ class _CrmBrowserState extends State<CrmBrowser> {
               '"__SC_ORIGIN__"',
               jsonEncode(NavigationPolicy.home.origin),
             );
-        setState(() => _pdfScript = '$pdfSource\n${sources[1]}');
+        setState(() => _pdfScript = '$pdfSource\n${sources[1]}\n${sources[2]}');
       }
     });
   }
@@ -135,6 +139,7 @@ class _CrmBrowserState extends State<CrmBrowser> {
   InAppWebViewController? _web;
   final _downloads = DocumentDownload();
   Uri _current = NavigationPolicy.home;
+  bool _backBusy = false;
   double _progress = 0;
   bool _unavailable = false, _httpError = false, _downloading = false;
   void _message(String text) {
@@ -183,11 +188,38 @@ class _CrmBrowserState extends State<CrmBrowser> {
   );
 
   Future<void> _back() async {
+    if (_backBusy) return;
+    _backBusy = true;
+    try {
+      await _performBack();
+    } finally {
+      _backBusy = false;
+    }
+  }
+
+  Future<void> _performBack() async {
     if (await _web?.canGoBack() ?? false) {
+      final history = await _web?.getCopyBackForwardList();
+      final index = history?.currentIndex;
+      final entries = history?.list;
+      if (isUserPortal(_current) &&
+          index != null &&
+          index > 0 &&
+          entries != null) {
+        final previous = entries[index - 1].url;
+        if (previous != null && !isUserPortal(previous)) {
+          if (!mounted || !await confirmLeavePortal(context) || !mounted) {
+            return;
+          }
+        }
+      }
       await _web?.goBack();
       return;
     }
     if (!mounted) return;
+    if (widget.windowId == null && isUserPortal(_current)) {
+      if (!await confirmLeavePortal(context) || !mounted) return;
+    }
     if (widget.windowId != null) {
       Navigator.of(context).pop();
       return;
@@ -221,6 +253,13 @@ class _CrmBrowserState extends State<CrmBrowser> {
   Future<NavigationActionPolicy> _navigate(NavigationAction action) async {
     final uri = action.request.url;
     if (uri == null) return NavigationActionPolicy.CANCEL;
+    if (action.isForMainFrame != false &&
+        isUserPortal(_current) &&
+        NavigationPolicy.isWebsite(uri)) {
+      if (!mounted || !await confirmLeavePortal(context)) {
+        return NavigationActionPolicy.CANCEL;
+      }
+    }
     if (action.isForMainFrame != false &&
         ToolboxNavigation.isMissingResource(uri)) {
       setState(() {
@@ -382,7 +421,13 @@ class _CrmBrowserState extends State<CrmBrowser> {
                 ),
                 QuickLinksMenu(
                   onSelected: _openQuickLink,
-                  onAbout: widget.onAbout ?? _info,
+                  onAbout: () async {
+                    if (isUserPortal(_current) &&
+                        !await confirmLeavePortal(context)) {
+                      return;
+                    }
+                    if (mounted) (widget.onAbout ?? _info)();
+                  },
                 ),
               ],
             ),
@@ -519,6 +564,7 @@ class _CrmBrowserState extends State<CrmBrowser> {
                 },
                 onLoadStop: (controller, url) async {
                   if (mounted) setState(() => _progress = 1);
+                  if (url != null) widget.onLocationChanged?.call(url);
                   await widget.onPageReady?.call(controller);
                 },
                 onProgressChanged: (controller, progress) {

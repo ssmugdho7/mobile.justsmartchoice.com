@@ -13,6 +13,7 @@ import 'quick_links.dart';
 import 'landing_page.dart';
 import 'launch_intro.dart';
 import 'contact_page.dart';
+import 'portal_navigation.dart';
 
 class AppShell extends StatefulWidget {
   const AppShell({
@@ -38,7 +39,19 @@ class _AppShellState extends State<AppShell> {
   InAppWebViewController? _controller;
   InAppWebViewController? _homeController;
   InAppWebViewController? _aboutController;
+  final _shopBack = PortalBackController();
+  Uri _shopLocation = NavigationPolicy.shop;
+  Future<void> _selectFromPortal(int page) async {
+    if ((_page == 2 || (_page == 0 && isUserPortal(_shopLocation))) &&
+        page != _page &&
+        !await confirmLeavePortal(context)) {
+      return;
+    }
+    if (mounted) _select(page);
+  }
+
   Future<void> _back() async {
+    if (_page == 0 && await _shopBack.goBack()) return;
     final controller = _page == 1
         ? _aboutController
         : (_page == 0 ? _homeController : null);
@@ -48,6 +61,12 @@ class _AppShellState extends State<AppShell> {
     }
     if (!mounted) return;
     if (_page == 1 || _page == 0 || _page == 4) {
+      if (_page == 0 &&
+          isUserPortal(_shopLocation) &&
+          !await confirmLeavePortal(context)) {
+        return;
+      }
+      if (!mounted) return;
       _select(3);
       return;
     }
@@ -236,9 +255,13 @@ class _AppShellState extends State<AppShell> {
               ],
             ),
           ),
-          _navItem(Icons.home, 'Home', () => _select(3)),
-          _navItem(Icons.shopping_bag_outlined, 'Shop', () => _select(0)),
-          _navItem(Icons.info_outline, 'About', () => _select(1)),
+          _navItem(Icons.home, 'Home', () => _selectFromPortal(3)),
+          _navItem(
+            Icons.shopping_bag_outlined,
+            'Shop',
+            () => _selectFromPortal(0),
+          ),
+          _navItem(Icons.info_outline, 'About', () => _selectFromPortal(1)),
           const Divider(thickness: 3, height: 24),
           SwitchListTile(
             title: const Text('Dark Mode'),
@@ -335,6 +358,9 @@ class _AppShellState extends State<AppShell> {
                                 ) ??
                                 PublicSiteView(
                                   uri: NavigationPolicy.shop,
+                                  backController: _shopBack,
+                                  onLocationChanged: (uri) =>
+                                      _shopLocation = uri,
                                   onPageReady: widget.onPageReady,
                                   onBrowserCreated: (controller) =>
                                       _homeController = controller,

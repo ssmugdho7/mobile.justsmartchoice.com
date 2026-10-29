@@ -34,6 +34,9 @@ void main() {
     );
     await tester.tap(find.widgetWithText(ListTile, 'About'));
     await tester.pumpAndSettle();
+    expect(find.text('Leave this portal?'), findsOneWidget);
+    await tester.tap(find.text('Leave portal'));
+    await tester.pumpAndSettle();
     expect(
       find.text('Public page: https://justsmartchoice.com/about.php'),
       findsOneWidget,
@@ -131,6 +134,9 @@ void main() {
       findsOneWidget,
     );
     await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.text('Leave this portal?'), findsOneWidget);
+    await tester.tap(find.text('Leave portal'));
     await tester.pumpAndSettle();
     expect(find.text('Employee Login'), findsOneWidget);
     expect(find.byType(LaunchIntro), findsNothing);

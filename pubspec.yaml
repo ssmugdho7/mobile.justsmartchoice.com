@@ -24,6 +24,7 @@ flutter:
   assets:
     - assets/pdf_download_bridge.js
     - assets/public_site_shell.js
+    - assets/staff_portal_mobile.js
     - assets/brand/smart-choice-logo.png
     - assets/fonts/OFL-LibreBaskerville.txt
 
