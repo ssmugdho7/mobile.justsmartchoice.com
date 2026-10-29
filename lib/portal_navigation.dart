@@ -41,7 +41,7 @@ Future<bool> confirmLeavePortal(BuildContext context) async =>
       builder: (dialogContext) => AlertDialog(
         title: const Text('Leave this portal?'),
         content: const Text(
-          'You’ll return to the app Home screen. This does not sign you out.',
+          'You’re about to leave this portal. This does not sign you out.',
         ),
         actions: [
           TextButton(
