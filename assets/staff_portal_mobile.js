@@ -9,6 +9,8 @@
   style.id = 'sc-staff-mobile-style';
   style.textContent = `
 @media (max-width:767px) {
+  body.app.admin #header #smart-choice-links-left-live,
+  body.app.admin #header #smart-choice-links-right-live { transform:translateX(4px)!important; }
   body.admin #wrapper > .content { padding:12px 12px 88px!important; }
   body.admin.sc-staff-dashboard #wrapper > .content > .row { margin-inline:0!important; }
   body.admin.sc-staff-dashboard #wrapper > .content > .row > [class*="col-"] { padding-inline:0!important; }
