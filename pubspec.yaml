@@ -1,7 +1,7 @@
 name: smart_choice_mobile
 description: Smart Choice mobile CRM for Android and iOS.
 publish_to: none
-version: 0.5.9+14
+version: 0.5.10+15
 environment:
   sdk: ^3.13.5
 dependencies:
